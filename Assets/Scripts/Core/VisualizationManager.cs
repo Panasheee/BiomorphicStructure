@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 
 namespace BiomorphicSim.Core
@@ -139,11 +140,10 @@ namespace BiomorphicSim.Core
             
             Debug.Log($"Wireframe mode {(enabled ? "enabled" : "disabled")}");
         }
-        
-        private void UpdateRenderMode()
+          private void UpdateRenderMode()
         {
             // Find all nodes and connections
-            BiomorphicSim.Morphology.MorphologyManager morphologyManager = FindObjectOfType<BiomorphicSim.Morphology.MorphologyManager>();
+            BiomorphicSim.Morphology.MorphologyManager morphologyManager = FindFirstObjectByType<BiomorphicSim.Morphology.MorphologyManager>(FindObjectsInactive.Include);
             
             if (morphologyManager == null)
                 return;
@@ -212,9 +212,8 @@ namespace BiomorphicSim.Core
                 return;
                 
             ClearVectorField();
-            
-            // Get bounds from site generator
-            SiteGenerator siteGenerator = FindObjectOfType<SiteGenerator>();
+              // Get bounds from site generator
+            SiteGenerator siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
             Vector3 terrainSize = Vector3.one * 100f;
             
             if (siteGenerator != null)
@@ -322,9 +321,8 @@ namespace BiomorphicSim.Core
         }
         
         public void FocusOnMorphology()
-        {
-            // Find the morphology manager
-            BiomorphicSim.Morphology.MorphologyManager morphologyManager = FindObjectOfType<BiomorphicSim.Morphology.MorphologyManager>();
+        {            // Find the morphology manager
+            BiomorphicSim.Morphology.MorphologyManager morphologyManager = FindFirstObjectByType<BiomorphicSim.Morphology.MorphologyManager>(FindObjectsInactive.Include);
             
             if (morphologyManager == null)
                 return;
@@ -342,6 +340,302 @@ namespace BiomorphicSim.Core
                 
                 // Ensure camera is looking at focus point
                 mainCamera.transform.LookAt(focusPoint);
+            }
+        }
+        
+        public void FocusOnSite()
+        {
+            // Focus camera on the center of the terrain/site
+            if (mainCamera != null)
+            {
+                // Calculate the center of the site
+                SiteGenerator siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
+                Vector3 siteCenter = Vector3.zero;
+                
+                if (siteGenerator != null)
+                {
+                    Vector3 terrainSize = siteGenerator.GetTerrainSize();
+                    siteCenter = new Vector3(terrainSize.x / 2, 0, terrainSize.z / 2);
+                }
+                
+                // Set focus point
+                focusPoint = siteCenter;
+                
+                // Position camera to look at the site
+                float distance = 150f; // Adjust as needed
+                Vector3 cameraPos = siteCenter + new Vector3(0, 75f, -distance);
+                mainCamera.transform.position = cameraPos;
+                mainCamera.transform.LookAt(siteCenter);
+            }
+        }
+        
+        public void ToggleWindOverlay(bool show)
+        {
+            // Toggle visualization of wind overlay
+            if (show)
+            {
+                // Create or show wind visualization
+                CreateVectorField();
+                
+                // You can update the vector field to represent wind
+                UpdateVectorFieldForWind();
+            }
+            else
+            {
+                // Hide wind visualization
+                ClearVectorField();
+            }
+        }
+        
+        public void ToggleSunExposureOverlay(bool show)
+        {
+            // Toggle visualization of sun exposure
+            SiteGenerator siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
+            if (siteGenerator == null) return;
+            
+            if (show)
+            {
+                // Create a heatmap-like visualization for sun exposure
+                CreateSunExposureOverlay();
+            }
+            else
+            {
+                // Hide sun exposure visualization
+                ClearOverlay("SunExposureOverlay");
+            }
+        }
+        
+        public void TogglePedestrianOverlay(bool show)
+        {
+            // Toggle visualization of pedestrian activity
+            SiteGenerator siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
+            if (siteGenerator == null) return;
+            
+            if (show)
+            {
+                // Create a visualization for pedestrian paths/activity
+                CreatePedestrianOverlay();
+            }
+            else
+            {
+                // Hide pedestrian visualization
+                ClearOverlay("PedestrianOverlay");
+            }
+        }
+        
+        // Helper methods for overlays
+        private void CreateSunExposureOverlay()
+        {
+            // Create parent object for overlay
+            GameObject overlayParent = new GameObject("SunExposureOverlay");
+            overlayParent.transform.SetParent(transform);
+            
+            // Example: Create a simple colored grid representing sun exposure
+            SiteGenerator siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
+            if (siteGenerator == null) return;
+            
+            Vector3 terrainSize = siteGenerator.GetTerrainSize();
+            int resolution = 20; // Grid resolution
+            float cellSize = terrainSize.x / resolution;
+            
+            for (int x = 0; x < resolution; x++)
+            {
+                for (int z = 0; z < resolution; z++)
+                {
+                    // Calculate position
+                    float xPos = x * cellSize;
+                    float zPos = z * cellSize;
+                    Vector3 position = new Vector3(xPos, 0, zPos);
+                    
+                    // Sample height if terrain exists
+                    if (Terrain.activeTerrain != null)
+                    {
+                        position.y = Terrain.activeTerrain.SampleHeight(position);
+                    }
+                    
+                    // Calculate sun exposure (example algorithm)
+                    // Eastern areas get more morning sun, western areas get more afternoon sun
+                    float normalizedX = (float)x / resolution;
+                    float normalizedZ = (float)z / resolution;
+                    float exposure = Mathf.PerlinNoise(normalizedX * 3f, normalizedZ * 3f);
+                    exposure = exposure * 0.5f + 0.5f; // Normalize to 0.5-1.0 range
+                    
+                    // Add bias for eastern orientation
+                    exposure += (1 - normalizedX) * 0.3f;
+                    
+                    // Create visualization object
+                    GameObject cell = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                    cell.transform.SetParent(overlayParent.transform);
+                    cell.transform.position = position + new Vector3(cellSize/2, 0.2f, cellSize/2); // Slightly above ground
+                    cell.transform.localScale = new Vector3(cellSize, cellSize, 1);
+                    cell.transform.eulerAngles = new Vector3(90, 0, 0); // Lay flat
+                    
+                    // Set color based on exposure
+                    Renderer renderer = cell.GetComponent<Renderer>();
+                    if (renderer != null)
+                    {
+                        // Create a material with orange-yellow color
+                        Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                        // Sun exposure color (yellow-orange)
+                        mat.color = new Color(1f, Mathf.Lerp(0.5f, 0.8f, exposure), 0f, 0.4f);
+                        renderer.material = mat;
+                    }
+                }
+            }
+        }
+        
+        private void CreatePedestrianOverlay()
+        {
+            // Create parent object for overlay
+            GameObject overlayParent = new GameObject("PedestrianOverlay");
+            overlayParent.transform.SetParent(transform);
+            
+            SiteGenerator siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
+            if (siteGenerator == null) return;
+            
+            // In a real implementation, we'd use actual pedestrian data
+            // For now, create a simplified visualization with higher traffic along main roads
+            
+            // Find the SiteGenerator to access roads
+            List<Transform> roads = new List<Transform>();
+            if (siteGenerator.transform.Find("Roads") != null)
+            {
+                Transform roadsParent = siteGenerator.transform.Find("Roads");
+                foreach (Transform road in roadsParent)
+                {
+                    roads.Add(road);
+                }
+            }
+            
+            // If no roads found, create some sample paths
+            if (roads.Count == 0)
+            {
+                // Create example pedestrian paths
+                Vector3 terrainSize = siteGenerator.GetTerrainSize();
+                
+                // Main street path
+                CreatePedestrianPath(
+                    new Vector3(0, 0, terrainSize.z / 2), 
+                    new Vector3(terrainSize.x, 0, terrainSize.z / 2), 
+                    Color.blue, 
+                    10f, // High traffic
+                    overlayParent.transform
+                );
+                
+                // Side street paths
+                for (int i = 1; i < 4; i++)
+                {
+                    float xPos = terrainSize.x * i / 4;
+                    CreatePedestrianPath(
+                        new Vector3(xPos, 0, 0), 
+                        new Vector3(xPos, 0, terrainSize.z), 
+                        Color.cyan, 
+                        5f, // Medium traffic
+                        overlayParent.transform
+                    );
+                }
+            }
+            else
+            {
+                // Create paths based on existing roads
+                foreach (Transform road in roads)
+                {
+                    // Extract road points if available (simplified)
+                    Vector3 start = road.position;
+                    Vector3 end = road.position + road.forward * 50f;
+                    
+                    // Determine traffic level based on road type or name
+                    float trafficLevel = 5f;
+                    if (road.name.Contains("main") || road.name.ToLower().Contains("lambton"))
+                    {
+                        trafficLevel = 10f; // High traffic for main roads
+                    }
+                    
+                    CreatePedestrianPath(start, end, Color.blue, trafficLevel, overlayParent.transform);
+                }
+            }
+        }
+        
+        private void CreatePedestrianPath(Vector3 start, Vector3 end, Color color, float intensity, Transform parent)
+        {
+            // Create a path visualization
+            GameObject pathObj = new GameObject("PedestrianPath");
+            pathObj.transform.SetParent(parent);
+            
+            // Create line renderer
+            LineRenderer line = pathObj.AddComponent<LineRenderer>();
+            line.positionCount = 2;
+            
+            // Sample terrain height
+            if (Terrain.activeTerrain != null)
+            {
+                start.y = Terrain.activeTerrain.SampleHeight(start) + 0.2f; // Slightly above ground
+                end.y = Terrain.activeTerrain.SampleHeight(end) + 0.2f;
+            }
+            
+            line.SetPosition(0, start);
+            line.SetPosition(1, end);
+            
+            // Style the line
+            line.startWidth = intensity;
+            line.endWidth = intensity;
+            line.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            
+            // Set color with transparency
+            Color pathColor = color;
+            pathColor.a = 0.6f;
+            line.startColor = pathColor;
+            line.endColor = pathColor;
+        }
+        
+        private void UpdateVectorFieldForWind()
+        {
+            if (vectorField == null)
+                return;
+                
+            // Example: Get wind direction from scenario analyzer
+            ScenarioAnalyzer scenarioAnalyzer = FindFirstObjectByType<ScenarioAnalyzer>(FindObjectsInactive.Include);
+            Vector3 windDirection = Vector3.right; // Default wind direction (east)
+            float windStrength = 1.0f;
+            
+            if (scenarioAnalyzer != null)
+            {
+                // In a real implementation, you'd get actual wind data from the analyzer
+                // For this example, we'll use simplified values
+                windDirection = scenarioAnalyzer.GetWindDirection();
+                windStrength = scenarioAnalyzer.GetWindStrength();
+            }
+            
+            // Update vector field visualization to show wind
+            foreach (GameObject vector in vectorField)
+            {
+                if (vector != null)
+                {
+                    // Set direction
+                    vector.transform.forward = windDirection;
+                    
+                    // Scale based on wind strength and add variation
+                    float heightFactor = Mathf.Clamp01(vector.transform.position.y / 50f);
+                    float strengthFactor = windStrength * (1f + heightFactor);
+                    vector.transform.localScale = Vector3.one * vectorFieldScale * strengthFactor;
+                    
+                    // Color based on strength
+                    Renderer renderer = vector.GetComponent<Renderer>();
+                    if (renderer != null)
+                    {
+                        Color windColor = Color.Lerp(Color.blue, Color.cyan, strengthFactor / 2f);
+                        renderer.material.color = windColor;
+                    }
+                }
+            }
+        }
+        
+        private void ClearOverlay(string overlayName)
+        {
+            Transform overlay = transform.Find(overlayName);
+            if (overlay != null)
+            {
+                Destroy(overlay.gameObject);
             }
         }
     }

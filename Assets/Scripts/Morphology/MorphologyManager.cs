@@ -27,6 +27,31 @@ namespace BiomorphicSim.Morphology
         [SerializeField] private float connectionStrength = 5.0f;
         [SerializeField] private float damping = 0.8f;
         
+        [Header("Web Structure Settings")]
+        [SerializeField] private float webConnectionDistance = 5.0f; // Distance for creating web-like connections
+        [SerializeField] private float webConnectionProbability = 0.3f; // Probability of making web connections
+        [SerializeField] private int maxWebConnections = 3; // Max additional web connections per node
+        [SerializeField] private Material primaryConnectionMaterial; // For main structural connections
+        [SerializeField] private Material webConnectionMaterial; // For web-like connections
+        
+        [Header("Environmental Response")]
+        [SerializeField] private float environmentalResponseStrength = 1.0f; // How strongly morphology responds
+        [SerializeField] private float windAvoidanceFactor = 0.8f; // How much to avoid high wind
+        [SerializeField] private float lightAttractionFactor = 0.6f; // How much to grow toward light
+        [SerializeField] private float gravityInfluenceFactor = 0.5f; // How much gravity affects growth
+        
+        // Track environmental conditions for growth influence
+        private Vector3 currentWindDirection = Vector3.zero;
+        private float currentWindStrength = 0f;
+        private Vector3 currentLightDirection = Vector3.down; // Default light from above
+        private float currentLightStrength = 1f;
+        private Vector3 currentGravityDirection = Vector3.down;
+        private float currentGravityStrength = 1f;
+        
+        // Visualization
+        [SerializeField] private GameObject environmentInfluenceVisualizerPrefab;
+        private GameObject environmentInfluenceVisualizer;
+        
         // Structure to hold node data
         [System.Serializable]
         public class BiomorphNode
@@ -105,6 +130,9 @@ namespace BiomorphicSim.Morphology
         // Stored references
         private SiteGenerator siteGenerator;
         
+        // New property to store the starting position for growth
+        private Vector3 growthStartPosition = Vector3.zero;
+        
         public void Initialize()
         {
             Debug.Log("Initializing Morphology Manager...");
@@ -126,7 +154,7 @@ namespace BiomorphicSim.Morphology
             currentGrowthAlgorithm = new BranchingGrowthAlgorithm();
             
             // Get reference to the site generator
-            siteGenerator = FindObjectOfType<SiteGenerator>();
+            siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
         }
         
         public void StartGrowth()
@@ -205,12 +233,16 @@ namespace BiomorphicSim.Morphology
                 }
             }
         }
-        
-        private void CreateInitialRootNode()
+          private void CreateInitialRootNode()
         {
-            // Use site generator to get a point on the terrain if available
             Vector3 position;
-            if (siteGenerator != null)
+            
+            // Use the set starting position if specified, otherwise use site generator
+            if (growthStartPosition != Vector3.zero)
+            {
+                position = growthStartPosition;
+            }
+            else if (siteGenerator != null)
             {
                 position = siteGenerator.GetRandomPointOnTerrain();
             }
@@ -238,6 +270,15 @@ namespace BiomorphicSim.Morphology
             if (currentGrowthAlgorithm == null || nodes.Count == 0)
                 return;
                 
+            // Calculate environmental influence
+            Vector3 environmentalInfluence = CalculateEnvironmentalInfluence();
+            
+            // Update the growth algorithm with environmental influence
+            if (currentGrowthAlgorithm is SpaceColonizationGrowth spaceAlgorithm)
+            {
+                spaceAlgorithm.SetEnvironmentalInfluence(environmentalInfluence);
+            }
+            
             // Use the current growth algorithm to determine where to grow next
             GrowthPoint growthPoint = currentGrowthAlgorithm.DetermineNextGrowthPoint(nodes);
             
@@ -247,12 +288,21 @@ namespace BiomorphicSim.Morphology
                 GameObject newNodeObject = Instantiate(nodePrefab, growthPoint.position, Quaternion.identity, nodesParent);
                 newNodeObject.name = "Node_" + nodes.Count;
                 
+                // Vary node size based on distance from root and environmental factors
+                float sizeFactor = Mathf.Clamp(1.0f - (nodes.Count / (float)maxNodes), 0.3f, 1.2f);
+                // Adjust size based on environmental conditions
+                sizeFactor *= 1.0f + (currentWindStrength * 0.1f) - (currentLightStrength * 0.1f);
+                newNodeObject.transform.localScale = Vector3.one * sizeFactor;
+                
                 // Create data structure
                 BiomorphNode newNode = new BiomorphNode(newNodeObject);
                 nodes.Add(newNode);
                 
                 // Connect to parent
                 CreateConnection(growthPoint.parentNode, newNode);
+                
+                // Create web-like connections
+                CreateWebConnections(newNode);
                 
                 // Find nearby nodes for additional connections
                 FindAndConnectNearbyNodes(newNode);
@@ -430,6 +480,191 @@ namespace BiomorphicSim.Morphology
         public void Cleanup()
         {
             PauseGrowth();
+        }
+        
+        /// <summary>
+        /// Calculates a combined environmental influence vector for growth
+        /// </summary>
+        private Vector3 CalculateEnvironmentalInfluence()
+        {
+            Vector3 influence = Vector3.zero;
+            
+            // Wind influence (grow away from strong wind)
+            if (currentWindStrength > 0)
+            {
+                influence -= currentWindDirection.normalized * currentWindStrength * windAvoidanceFactor;
+            }
+            
+            // Light influence (grow toward light)
+            if (currentLightStrength > 0)
+            {
+                influence -= currentLightDirection.normalized * currentLightStrength * lightAttractionFactor;
+            }
+            
+            // Gravity influence (generally grow against gravity)
+            influence -= currentGravityDirection.normalized * currentGravityStrength * gravityInfluenceFactor;
+            
+            // Normalize the total influence
+            if (influence.magnitude > 0)
+            {
+                influence.Normalize();
+            }
+            
+            return influence * environmentalResponseStrength;
+        }
+        
+        /// <summary>
+        /// Updates the current environmental conditions from the ScenarioAnalyzer
+        /// </summary>
+        public void UpdateEnvironmentalConditions(Vector3 windDir, float windStr, Vector3 lightDir, float lightStr)
+        {
+            currentWindDirection = windDir;
+            currentWindStrength = windStr;
+            currentLightDirection = lightDir;
+            currentLightStrength = lightStr;
+            
+            // If using space colonization algorithm, update its environmental influence
+            if (currentGrowthAlgorithm is SpaceColonizationGrowth spaceAlgorithm)
+            {
+                spaceAlgorithm.SetEnvironmentalInfluence(CalculateEnvironmentalInfluence());
+            }
+            
+            // Update visualizer
+            UpdateEnvironmentInfluenceVisualizer();
+        }
+        
+        /// <summary>
+        /// Creates web-like connections between nodes that are close but not directly connected
+        /// This creates the complex mesh-like structure seen in the reference images
+        /// </summary>
+        private void CreateWebConnections(BiomorphNode newNode)
+        {
+            if (newNode == null || nodes.Count < 3)
+                return;
+            
+            int webConnectionsMade = 0;
+            Vector3 newNodePos = newNode.gameObject.transform.position;
+            
+            // Sort nodes by distance to the new node
+            List<BiomorphNode> nearbyNodes = new List<BiomorphNode>();
+            foreach (var node in nodes)
+            {
+                if (node == newNode)
+                    continue;
+                
+                // Skip if already directly connected
+                bool alreadyConnected = false;
+                foreach (var conn in newNode.connections)
+                {
+                    if (conn.nodeA == node || conn.nodeB == node)
+                    {
+                        alreadyConnected = true;
+                        break;
+                    }
+                }
+                
+                if (alreadyConnected)
+                    continue;
+                
+                // Check distance
+                float distance = Vector3.Distance(newNodePos, node.gameObject.transform.position);
+                if (distance <= webConnectionDistance)
+                {
+                    nearbyNodes.Add(node);
+                }
+            }
+            
+            // Randomly create some web connections based on probability
+            nearbyNodes.Sort((a, b) => 
+                Vector3.Distance(a.gameObject.transform.position, newNodePos).CompareTo(
+                Vector3.Distance(b.gameObject.transform.position, newNodePos)));
+            
+            foreach (var node in nearbyNodes)
+            {
+                if (webConnectionsMade >= maxWebConnections)
+                    break;
+                
+                if (Random.value <= webConnectionProbability)
+                {
+                    // Create web connection
+                    GameObject connectionObject = Instantiate(connectionPrefab, Vector3.zero, Quaternion.identity, connectionsParent);
+                    connectionObject.name = "WebConnection_" + newNode.gameObject.name + "_" + node.gameObject.name;
+                    
+                    // Use special material for web connections
+                    if (webConnectionMaterial != null && connectionObject.GetComponent<Renderer>() != null)
+                    {
+                        connectionObject.GetComponent<Renderer>().material = webConnectionMaterial;
+                    }
+                    
+                    // Make web connections thinner
+                    connectionObject.transform.localScale = new Vector3(0.1f, 
+                                                                       connectionObject.transform.localScale.y, 
+                                                                       0.1f);
+                    
+                    // Create connection data structure
+                    BiomorphConnection connection = new BiomorphConnection(connectionObject, newNode, node, connectionStrength * 0.5f);
+                    
+                    // Add connection to both nodes
+                    newNode.connections.Add(connection);
+                    node.connections.Add(connection);
+                    
+                    // Update visuals
+                    connection.UpdateVisual();
+                    
+                    webConnectionsMade++;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Creates a visualization of the current environmental influence
+        /// </summary>
+        private void UpdateEnvironmentInfluenceVisualizer()
+        {
+            if (environmentInfluenceVisualizer == null && environmentInfluenceVisualizerPrefab != null)
+            {
+                environmentInfluenceVisualizer = Instantiate(environmentInfluenceVisualizerPrefab, 
+                                                           Vector3.zero, Quaternion.identity, transform);
+                environmentInfluenceVisualizer.name = "EnvironmentInfluenceVisualizer";
+            }
+            
+            if (environmentInfluenceVisualizer != null)
+            {
+                Vector3 influence = CalculateEnvironmentalInfluence();
+                
+                // Set visualizer direction and scale
+                environmentInfluenceVisualizer.transform.forward = influence;
+                float strengthFactor = Mathf.Clamp01(influence.magnitude * 2f);
+                environmentInfluenceVisualizer.transform.localScale = Vector3.one * strengthFactor;
+                
+                // Position at the centroid of the structure
+                Vector3 centroid = CalculateStructureCentroid();
+                environmentInfluenceVisualizer.transform.position = centroid;
+            }
+        }
+        
+        /// <summary>
+        /// Calculates the center point of the current structure
+        /// </summary>
+        private Vector3 CalculateStructureCentroid()
+        {
+            if (nodes.Count == 0)
+                return Vector3.zero;
+            
+            Vector3 sum = Vector3.zero;
+            foreach (var node in nodes)
+            {
+                sum += node.gameObject.transform.position;
+            }
+            
+            return sum / nodes.Count;
+        }
+        
+        // Method to set the starting position for growth
+        public void SetStartPosition(Vector3 position)
+        {
+            growthStartPosition = position;
+            Debug.Log($"Growth start position set to: {position}");
         }
     }
     

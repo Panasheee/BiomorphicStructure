@@ -11,13 +11,12 @@ namespace BiomorphicSim.Core
     /// Acts as the central orchestrator for all simulation systems.
     /// </summary>
     public class MainController : MonoBehaviour
-    {
-        // References to other managers
-        [SerializeField] private SiteGenerator siteGenerator;
-        [SerializeField] private MorphologyManager morphologyManager;
-        [SerializeField] private ScenarioAnalyzer scenarioAnalyzer;
-        [SerializeField] private UIManager uiManager;
-        [SerializeField] private VisualizationManager visualizationManager;
+    {    // References to other managers
+    [SerializeField] private SiteGenerator siteGenerator;
+    [SerializeField] private MorphologyManager morphologyManager;
+    [SerializeField] private ScenarioAnalyzer scenarioAnalyzer;
+    [SerializeField] private ModernUIController uiManager;
+    [SerializeField] private VisualizationManager visualizationManager;
 
         // Simulation state
         private bool isSimulationRunning = false;
@@ -27,19 +26,17 @@ namespace BiomorphicSim.Core
     {
         // Ensure we have all required components
         if (siteGenerator == null)
-            siteGenerator = FindObjectOfType<SiteGenerator>();
+            siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
         
         if (morphologyManager == null)
-            morphologyManager = FindObjectOfType<MorphologyManager>();
-        
-        if (scenarioAnalyzer == null)
-            scenarioAnalyzer = FindObjectOfType<ScenarioAnalyzer>();
-        
-        if (uiManager == null)
-            uiManager = FindObjectOfType<UIManager>();
+            morphologyManager = FindFirstObjectByType<MorphologyManager>(FindObjectsInactive.Include);
+          if (scenarioAnalyzer == null)
+            scenarioAnalyzer = FindFirstObjectByType<ScenarioAnalyzer>(FindObjectsInactive.Include);
+          if (uiManager == null)
+            uiManager = FindFirstObjectByType<ModernUIController>(FindObjectsInactive.Include);
         
         if (visualizationManager == null)
-            visualizationManager = FindObjectOfType<VisualizationManager>();
+            visualizationManager = FindFirstObjectByType<VisualizationManager>(FindObjectsInactive.Include);
 
         // Initialize systems except UI (will be done in Start)
         InitializeAllSystems();

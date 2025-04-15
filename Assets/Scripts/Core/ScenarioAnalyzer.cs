@@ -29,10 +29,9 @@ namespace BiomorphicSim.Core
         [Header("Visualization")]
         [SerializeField] private GameObject windVectorPrefab;
         [SerializeField] private GameObject lightVectorPrefab;
-        
-        // References
+          // References
         private MorphologyManager morphologyManager;
-        private UIManager uiManager;
+        private MainUIController uiManager;
         
         // Internal data
         private Dictionary<string, ScenarioData> scenarios = new Dictionary<string, ScenarioData>();
@@ -79,8 +78,8 @@ namespace BiomorphicSim.Core
             Debug.Log("Initializing Scenario Analyzer...");
             
             // Get references
-            morphologyManager = FindObjectOfType<MorphologyManager>();
-            uiManager = FindObjectOfType<UIManager>();
+            morphologyManager = FindFirstObjectByType<MorphologyManager>(FindObjectsInactive.Include);
+            uiManager = FindFirstObjectByType<MainUIController>(FindObjectsInactive.Include);
             
             // Set up default scenarios
             SetupDefaultScenarios();
@@ -337,6 +336,16 @@ namespace BiomorphicSim.Core
             }
             
             return result;
+        }
+        
+        public Vector3 GetWindDirection()
+        {
+            return windDirection.normalized;
+        }
+
+        public float GetWindStrength()
+        {
+            return windSpeed * scenarioIntensity;
         }
         
         public void Cleanup()
