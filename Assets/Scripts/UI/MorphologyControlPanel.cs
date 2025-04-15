@@ -51,13 +51,14 @@ public class MorphologyControlPanel : MonoBehaviour
     private MorphologyParameters currentParameters = new MorphologyParameters();
     private MorphologyParameters.BiomorphType currentBiomorphType;
     private bool isDirty = false;
-    
-    // Events
+      // Events
     public delegate void MorphologyParametersChangedHandler(MorphologyParameters parameters);
     public event MorphologyParametersChangedHandler OnParametersChanged;
     #endregion
 
-    #region Unity Methods    private void Awake()
+    #region Unity Methods
+    
+    private void Awake()
     {
         // Default values if not set
         if (adaptationSystem == null)

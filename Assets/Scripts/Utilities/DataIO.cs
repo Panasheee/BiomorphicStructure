@@ -121,27 +121,8 @@ public class DataIO : MonoBehaviour
             
             // Read JSON from file
             string jsonData = File.ReadAllText(filePath);
-            
-            // Parse JSON to object
-            MorphologyData morphologyData = JsonUtility.FromJson<MorphologyData>(jsonData);
-            
-            // Fix for Dictionary deserialization
-            if (jsonData.Contains("\"metrics\":"))
-            {
-                string metricsJson = ExtractPropertyFromJson(jsonData, "metrics");
-                if (!string.IsNullOrEmpty(metricsJson))
-                {
-                    SerializableDictionary serializableMetrics = JsonUtility.FromJson<SerializableDictionary>(metricsJson);
-                    
-                    morphologyData.metrics = new Dictionary<string, float>();
-                    foreach (var item in serializableMetrics.Items)
-                    {
-                        morphologyData.metrics[item.Key] = item.Value;
-                    }
-                }
-            }
-            
-            Debug.Log($"Morphology loaded from {filePath}");
+            // Instead of using the unqualified type, fully qualify it:
+            BiomorphicSim.Core.MorphologyData morphologyData = JsonUtility.FromJson<BiomorphicSim.Core.MorphologyData>(jsonData);
             return morphologyData;
         }
         catch (Exception e)
@@ -153,7 +134,7 @@ public class DataIO : MonoBehaviour
     
     /// <summary>
     /// Saves scenario data to a file
-    /// </summary>
+    /// </summary>  
     /// <param name="scenarioData">The data to save</param>
     /// <param name="fileName">Name for the save file (without extension)</param>
     /// <returns>True if save successful</returns>

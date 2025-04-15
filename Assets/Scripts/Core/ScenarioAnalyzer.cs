@@ -14,15 +14,14 @@ public class ScenarioAnalyzer : MonoBehaviour
     [SerializeField] private ScenarioSettings settings;
     
     [Header("Visualization")]
-    [SerializeField] private Material standardMaterial;
-    [SerializeField] private Material stressMaterial;
+    [SerializeField] private Material standardMaterial;    [SerializeField] private Material stressMaterial;
     [SerializeField] private Material adaptationMaterial;
     [SerializeField] private GameObject forceVisualizerPrefab;
     #endregion
-
+    
     #region State
     // The morphology being analyzed
-    private MorphologyData currentMorphology;
+    private BiomorphicSim.Core.MorphologyData currentMorphology;
     private List<MorphNode> morphNodes = new List<MorphNode>();
     private List<MorphConnection> morphConnections = new List<MorphConnection>();
     
@@ -93,13 +92,12 @@ public class ScenarioAnalyzer : MonoBehaviour
     {
         settings = newSettings;
     }
-    
-    /// <summary>
+      /// <summary>
     /// Runs a scenario analysis on the specified morphology
     /// </summary>
     /// <param name="morphologyData">The morphology to analyze</param>
     /// <param name="scenario">The scenario to run</param>
-    public void RunScenario(MorphologyData morphologyData, ScenarioData scenario)
+    public void RunScenario(BiomorphicSim.Core.MorphologyData morphologyData, ScenarioData scenario)
     {
         // Stop any existing analysis
         if (isAnalyzing)

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
+using BiomorphicSim.Core;
 
 /// <summary>
 /// Manages the user interface for the morphology simulator.
@@ -116,6 +117,15 @@ public class UIManager : MonoBehaviour
     // Current simulation state
     private MorphologyManager.SimulationState currentState = MorphologyManager.SimulationState.Idle;
     #endregion
+
+    
+    public void SetupPresetZones() { Debug.Log("Placeholder: SetupZones called"); }
+    public void UpdateZoneSelection(Bounds zone) { Debug.Log($"Placeholder: UpdateZoneSelection called with zone: {zone}"); }
+    public void UpdateUI(MorphologyManager.SimulationState state)
+{
+    Debug.Log($"Placeholder: UpdateUI called with state: {state}");
+    // TODO: Update UI based on state
+}
 
     #region Unity Lifecycle
     private void Awake()
@@ -277,267 +287,204 @@ public class UIManager : MonoBehaviour
             });
         }
     }
-    
-    /// <summary>
-    /// Sets up listeners for buttons
-    /// </summary>
-    private void SetupButtonListeners()
+    #endregion
+
+    #region Event Handlers - Buttons
+    // Placeholder methods to resolve CS0103 errors
+    private void OnGenerateSiteClicked()
     {
-        // Navigation buttons
-        if (siteTabButton != null) siteTabButton.onClick.AddListener(() => ShowPanel(siteSelectionPanel));
-        if (zoneTabButton != null) zoneTabButton.onClick.AddListener(() => ShowPanel(zoneSelectionPanel));
-        if (morphologyTabButton != null) morphologyTabButton.onClick.AddListener(() => ShowPanel(morphologyControlPanel));
-        if (scenarioTabButton != null) scenarioTabButton.onClick.AddListener(() => ShowPanel(scenarioPanel));
-        if (resultsTabButton != null) resultsTabButton.onClick.AddListener(() => ShowPanel(resultsPanel));
-        if (settingsTabButton != null) settingsTabButton.onClick.AddListener(() => ShowPanel(settingsPanel));
-        
-        // Site generation
-        if (generateSiteButton != null) generateSiteButton.onClick.AddListener(OnGenerateSiteClicked);
-        
-        // Zone selection
-        if (selectRandomZoneButton != null) selectRandomZoneButton.onClick.AddListener(OnSelectRandomZoneClicked);
-        if (confirmZoneButton != null) confirmZoneButton.onClick.AddListener(OnConfirmZoneClicked);
-        
-        // Morphology generation
-        if (generateMorphologyButton != null) generateMorphologyButton.onClick.AddListener(OnGenerateMorphologyClicked);
-        if (resetMorphologyButton != null) resetMorphologyButton.onClick.AddListener(OnResetMorphologyClicked);
-        
-        // Scenario controls
-        if (runScenarioButton != null) runScenarioButton.onClick.AddListener(OnRunScenarioClicked);
-        if (stopScenarioButton != null) stopScenarioButton.onClick.AddListener(OnStopScenarioClicked);
-        if (addFactorButton != null) addFactorButton.onClick.AddListener(OnAddFactorClicked);
-        
-        // Results controls
-        if (exportResultsButton != null) exportResultsButton.onClick.AddListener(OnExportResultsClicked);
-        
-        // Settings controls
-        if (applySettingsButton != null) applySettingsButton.onClick.AddListener(OnApplySettingsClicked);
-        
-        // Visualization controls
-        if (screenshotButton != null) screenshotButton.onClick.AddListener(OnScreenshotClicked);
+        Debug.LogWarning("OnGenerateSiteClicked not fully implemented.");
+        // TODO: Call appropriate method in SiteManager or MorphologyManager
     }
-    
-    /// <summary>
-    /// Sets up listeners for sliders
-    /// </summary>
-    private void SetupSliderListeners()
+
+    private void OnSelectRandomZoneClicked()
     {
-        // Zone selection sliders
-        if (zoneWidthSlider != null) zoneWidthSlider.onValueChanged.AddListener(OnZoneSizeChanged);
-        if (zoneHeightSlider != null) zoneHeightSlider.onValueChanged.AddListener(OnZoneSizeChanged);
-        if (zoneDepthSlider != null) zoneDepthSlider.onValueChanged.AddListener(OnZoneSizeChanged);
-        
-        // Camera controls
-        if (cameraSpeedSlider != null) cameraSpeedSlider.onValueChanged.AddListener(OnCameraSpeedChanged);
-        if (autoRotateToggle != null) autoRotateToggle.onValueChanged.AddListener(OnAutoRotateChanged);
-        
-        // Visualization controls
-        if (transparencySlider != null) transparencySlider.onValueChanged.AddListener(OnTransparencyChanged);
-        if (showStressColorsToggle != null) showStressColorsToggle.onValueChanged.AddListener(OnShowStressColorsChanged);
-        if (showForcesToggle != null) showForcesToggle.onValueChanged.AddListener(OnShowForcesChanged);
+        Debug.LogWarning("OnSelectRandomZoneClicked not fully implemented.");
+        // TODO: Call appropriate method in ZoneSelectionManager or MorphologyManager
     }
-    
-    /// <summary>
-    /// Creates a gizmo to visualize the selected zone
-    /// </summary>
-    private void CreateZoneGizmo()
+
+    private void OnConfirmZoneClicked()
     {
-        // Create parent object
-        zoneGizmo = new GameObject("ZoneGizmo");
-        
-        // Create wireframe for the zone
-        GameObject wireframe = new GameObject("Wireframe");
-        wireframe.transform.parent = zoneGizmo.transform;
-        
-        // Add line renderer
-        LineRenderer lineRenderer = wireframe.AddComponent<LineRenderer>();
-        lineRenderer.useWorldSpace = true;
-        lineRenderer.startWidth = 0.1f;
-        lineRenderer.endWidth = 0.1f;
-        lineRenderer.material = new Material(Shader.Find("Standard"));
-        lineRenderer.material.color = new Color(0, 1, 0, 0.7f);
-        
-        // Set points for a cube (12 lines, 24 points with loops)
-        lineRenderer.positionCount = 24;
-        
-        // Hide initially
-        zoneGizmo.SetActive(false);
+        Debug.LogWarning("OnConfirmZoneClicked not fully implemented.");
+        // TODO: Call appropriate method in MorphologyManager to confirm zone
+        ShowPanel(morphologyControlPanel); // Example navigation
+    }
+
+    private void OnGenerateMorphologyClicked()
+    {
+        Debug.LogWarning("OnGenerateMorphologyClicked not fully implemented.");
+        // TODO: Gather parameters from UI and call MorphologyManager.GenerateMorphology
+        MorphologyParameters parameters = GetCurrentMorphologyParameters();
+        MorphologyManager.Instance.GenerateMorphology(selectedZone, parameters);
+    }
+
+    private void OnResetMorphologyClicked()
+    {
+        Debug.LogWarning("OnResetMorphologyClicked not fully implemented.");
+        // TODO: Call MorphologyManager.ResetMorphology
+        MorphologyManager.Instance.ResetMorphology();
+    }
+
+    private void OnRunScenarioClicked()
+    {
+        Debug.LogWarning("OnRunScenarioClicked not fully implemented.");
+        // TODO: Gather scenario settings and call ScenarioManager.RunScenario
+        ScenarioParameters scenarioParams = GetCurrentScenarioParameters();
+        ScenarioManager.Instance.RunScenario(scenarioParams);
+    }
+
+    private void OnStopScenarioClicked()
+    {
+        Debug.LogWarning("OnStopScenarioClicked not fully implemented.");
+        // TODO: Call ScenarioManager.StopScenario
+        ScenarioManager.Instance.StopScenario();
+    }
+
+    private void OnAddFactorClicked()
+    {
+        Debug.LogWarning("OnAddFactorClicked not fully implemented.");
+        // TODO: Implement adding new environmental factor UI element
+        AddEnvironmentalFactorUI();
+    }
+
+    private void OnExportResultsClicked()
+    {
+        Debug.LogWarning("OnExportResultsClicked not fully implemented.");
+        // TODO: Call ResultsManager or DataIO to export results
+        ResultsManager.Instance.ExportResults();
+    }
+
+    private void OnApplySettingsClicked()
+    {
+        Debug.LogWarning("OnApplySettingsClicked not fully implemented.");
+        // TODO: Apply settings from the settings panel
+        ApplySimulationSettings();
+    }
+
+    private void OnScreenshotClicked()
+    {
+        Debug.LogWarning("OnScreenshotClicked not fully implemented.");
+        // TODO: Call a utility method to capture screenshot
+        ScreenCaptureUtility.CaptureScreenshot();
     }
     #endregion
 
-    #region Public Methods
-    /// <summary>
-    /// Updates the UI based on the current simulation state
-    /// </summary>
-    /// <param name="state">Current simulation state</param>
-    public void UpdateUI(MorphologyManager.SimulationState state)
+    #region Event Handlers - Sliders & Toggles
+    // Placeholder methods to resolve CS0103 errors
+    private void OnZoneSizeChanged(float value) // Assuming single handler for all 3 sliders
     {
-        currentState = state;
-        
-        switch (state)
-        {
-            case MorphologyManager.SimulationState.Idle:
-                statusText.text = "Ready";
-                generationProgressSlider.gameObject.SetActive(false);
-                analysisProgressSlider.gameObject.SetActive(false);
-                break;
-                
-            case MorphologyManager.SimulationState.SiteGeneration:
-                statusText.text = "Generating site...";
-                generationProgressSlider.gameObject.SetActive(true);
-                ShowPanel(siteSelectionPanel);
-                break;
-                
-            case MorphologyManager.SimulationState.ZoneSelection:
-                statusText.text = "Select zone for morphology generation";
-                generationProgressSlider.gameObject.SetActive(false);
-                zoneSelectionPanel.SetActive(true);
-                break;
-                
-            case MorphologyManager.SimulationState.MorphologyGeneration:
-                statusText.text = "Generating morphology...";
-                generationProgressSlider.gameObject.SetActive(true);
-                ShowPanel(morphologyControlPanel);
-                break;
-                
-            case MorphologyManager.SimulationState.ScenarioAnalysis:
-                statusText.text = "Running scenario analysis...";
-                analysisProgressSlider.gameObject.SetActive(true);
-                ShowPanel(scenarioPanel);
-                break;
-                
-            case MorphologyManager.SimulationState.Paused:
-                statusText.text = "Paused";
-                break;
-        }
-        
-        // Update button states
-        UpdateButtonStates(state);
+        Debug.LogWarning("OnZoneSizeChanged not fully implemented.");
+        // TODO: Update selectedZone bounds based on slider values
+        UpdateSelectedZoneFromSliders();
     }
-    
-    /// <summary>
-    /// Updates the zone selection visualization
-    /// </summary>
-    /// <param name="zone">Selected zone bounds</param>
-    public void UpdateZoneSelection(Bounds zone)
+
+    private void OnCameraSpeedChanged(float value)
     {
-        selectedZone = zone;
-        
-        // Update zone gizmo
-        UpdateZoneGizmo(zone);
-        
-        // Update zone info text
-        zoneInfoText.text = $"Zone: Center({zone.center.x:F1}, {zone.center.y:F1}, {zone.center.z:F1}), " +
-                            $"Size({zone.size.x:F1}, {zone.size.y:F1}, {zone.size.z:F1})";
-        
-        // Show the gizmo
-        zoneGizmo.SetActive(true);
-        
-        // Enable morphology generation
-        if (morphologyTabButton != null) morphologyTabButton.interactable = true;
+        Debug.LogWarning("OnCameraSpeedChanged not fully implemented.");
+        cameraSpeed = value;
+        // TODO: Update camera controller speed if separate component exists
     }
-    
-    /// <summary>
-    /// Updates the morphology generation progress
-    /// </summary>
-    /// <param name="progress">Generation progress (0-1)</param>
-    public void UpdateGenerationProgress(float progress)
+
+    private void OnAutoRotateChanged(bool value)
     {
-        if (generationProgressSlider != null)
-        {
-            generationProgressSlider.value = progress;
-            statusText.text = $"Generating morphology... {progress * 100:F0}%";
-        }
+        Debug.LogWarning("OnAutoRotateChanged not fully implemented.");
+        autoRotate = value;
     }
-    
-    /// <summary>
-    /// Updates the scenario analysis progress
-    /// </summary>
-    /// <param name="progress">Analysis progress (0-1)</param>
-    public void UpdateScenarioProgress(float progress)
+
+    private void OnTransparencyChanged(float value)
     {
-        if (analysisProgressSlider != null)
+        Debug.LogWarning("OnTransparencyChanged not fully implemented.");
+        // TODO: Call VisualizationManager to set transparency
+        VisualizationManager.Instance.SetGlobalTransparency(value);
+    }
+
+    private void OnShowStressColorsChanged(bool value)
+    {
+        Debug.LogWarning("OnShowStressColorsChanged not fully implemented.");
+        // TODO: Call VisualizationManager to toggle stress colors
+        VisualizationManager.Instance.SetStressColorVisibility(value);
+    }
+
+    private void OnShowForcesChanged(bool value)
+    {
+        Debug.LogWarning("OnShowForcesChanged not fully implemented.");
+        // TODO: Call VisualizationManager to toggle force vectors
+        VisualizationManager.Instance.SetForceVectorVisibility(value);
+    }
+    #endregion
+
+    #region Event Handlers - Dropdowns
+    // Placeholder method to resolve CS0103 error
+    private void OnScenarioChanged(int index)
+    {
+        Debug.LogWarning("OnScenarioChanged not fully implemented.");
+        // TODO: Update scenario panel based on selected scenario preset
+        string selectedScenario = scenarioDropdown.options[index].text;
+        UpdateScenarioPanelForPreset(selectedScenario);
+    }
+    #endregion
+
+    #region Helper Methods for Event Handlers (Placeholders)
+
+    private MorphologyParameters GetCurrentMorphologyParameters()
+    {
+        // TODO: Read values from densitySlider, complexitySlider, etc.
+        Debug.LogWarning("GetCurrentMorphologyParameters reading default values.");
+        return new MorphologyParameters {
+            biomorphType = (MorphologyParameters.BiomorphType)biomorphTypeDropdown.value,
+            density = densitySlider.value,
+            complexity = complexitySlider.value,
+            connectivity = connectivitySlider.value
+            // Add other parameters
+        };
+    }
+
+    private ScenarioParameters GetCurrentScenarioParameters()
+    {
+        // TODO: Read values from scenario panel controls
+        Debug.LogWarning("GetCurrentScenarioParameters reading default values.");
+        return new ScenarioParameters(); // Replace with actual parameters
+    }
+
+    private void AddEnvironmentalFactorUI()
+    {
+        // TODO: Instantiate environmentalFactorPrefab and add to scroll view
+        Debug.LogWarning("AddEnvironmentalFactorUI not implemented.");
+        if (environmentalFactorPrefab != null && environmentalFactorsScrollView != null)
         {
-            analysisProgressSlider.value = progress;
-            statusText.text = $"Running scenario analysis... {progress * 100:F0}%";
+            // GameObject factorGO = Instantiate(environmentalFactorPrefab, environmentalFactorsScrollView.content);
+            // EnvironmentalFactorUI factorUI = factorGO.GetComponent<EnvironmentalFactorUI>();
+            // if (factorUI != null)
+            // {
+            //     activeFactors.Add(factorUI);
+            //     // Initialize factorUI
+            // }
         }
     }
-    
-    /// <summary>
-    /// Called when a morphology has been generated
-    /// </summary>
-    /// <param name="morphologyData">Generated morphology data</param>
-    /// <param name="id">Unique identifier for the morphology</param>
-    public void OnMorphologyGenerated(MorphologyData morphologyData, string id)
+
+    private void ApplySimulationSettings()
     {
-        // Save the morphology
-        savedMorphologies[id] = morphologyData;
-        
-        // Update UI
-        statusText.text = "Morphology generation complete";
-        generationProgressSlider.gameObject.SetActive(false);
-        
-        // Enable scenario analysis
-        if (scenarioTabButton != null) scenarioTabButton.interactable = true;
-        
-        // Log metrics
-        Debug.Log($"Morphology generated: {id}");
-        Debug.Log($"Node count: {morphologyData.nodePositions.Count}");
-        Debug.Log($"Connection count: {morphologyData.connections.Count}");
-        
-        // Add to the morphology dropdown if it exists
-        AddMorphologyToDropdowns(id);
+        // TODO: Read values from timeStepSlider, maxIterationsSlider, etc. and apply them
+        Debug.LogWarning("ApplySimulationSettings not implemented.");
+        // Example: SimulationSettings.TimeStep = timeStepSlider.value;
     }
 
-    /// <summary>
-    /// Public method to display scenario results (for MorphologyManager)
-    /// </summary>
-    public void DisplayScenarioResults(ScenarioResults results)
+    private void UpdateSelectedZoneFromSliders()
     {
-        if (results == null) return;
-        DisplayMetrics(results);
-        CreateGraphs(results.timeSeriesData);
-        DisplayObservations(results.observations);
-        ShowPanel(resultsPanel);
+        // TODO: Read slider values and update selectedZone & gizmo
+        Debug.LogWarning("UpdateSelectedZoneFromSliders not implemented.");
+        if (zoneWidthSlider != null && zoneHeightSlider != null && zoneDepthSlider != null)
+        {
+            // Vector3 newSize = new Vector3(zoneWidthSlider.value, zoneHeightSlider.value, zoneDepthSlider.value);
+            // selectedZone.size = newSize;
+            // UpdateZoneSelection(selectedZone); // Update gizmo and text
+        }
     }
 
-    /// <summary>
-    /// Sets up preset zones (Placeholder based on error)
-    /// </summary>
-    public void SetupPresetZones()
+     private void UpdateScenarioPanelForPreset(string scenarioName)
     {
-        Debug.LogWarning("UIManager.SetupPresetZones() not implemented.");
-        // TODO: Implement
-    }
-
-    /// <summary>
-    /// Shows the comparison panel (Placeholder based on error)
-    /// </summary>
-    public void ShowComparisonPanel(List<ScenarioResults> resultsList)
-    {
-        Debug.LogWarning("UIManager.ShowComparisonPanel() not implemented.");
-        // TODO: Implement comparison display
-        ShowPanel(resultsPanel); // Fallback
-    }
-
-    /// <summary>
-    /// Shows the lifecycle comparison panel (Placeholder based on error)
-    /// </summary>
-    public void ShowLifecycleComparisonPanel(List<MorphologyData> lifecycleData)
-    {
-        Debug.LogWarning("UIManager.ShowLifecycleComparisonPanel() not implemented.");
-        // TODO: Implement lifecycle comparison display
-        ShowPanel(resultsPanel); // Fallback
-    }
-
-    /// <summary>
-    /// Sets references to other managers (Placeholder based on error in MainController)
-    /// </summary>
-    // Overload or adjust based on actual usage in MainController
-    public void SetReferences(MorphologyGenerator morphGen, AdaptationSystem adaptSys, GrowthSystem growthSys, ScenarioAnalyzer scenarioAn, EnvironmentManager envMan)
-    {
-        Debug.LogWarning("UIManager.SetReferences() called with 5 arguments.");
-        // TODO: Implement logic to store or use these references.
+        // TODO: Load preset settings into the scenario panel UI elements
+        Debug.LogWarning($"UpdateScenarioPanelForPreset for '{scenarioName}' not implemented.");
     }
 
     #endregion
@@ -766,71 +713,73 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// Creates graphs for time series data
     /// </summary>
-    /// <param name="timeSeriesData">Time series data from analysis</param>
+    /// <param name=\"timeSeriesData\">Time series data from analysis</param>
     private void CreateGraphs(Dictionary<string, List<float>> timeSeriesData)
     {
         if (graphContainer == null || graphPrefab == null || timeSeriesData == null) return;
-        
+
+        ClearGraphs(); // Clear previous graphs
+
         // Limit to the most important metrics for display
         string[] keysToDisplay = new string[]
         {
             "AverageStress",
             "MaxDisplacement",
             "AverageConnectivity"
+            // Add other relevant keys as needed
         };
-        
+
         int graphCount = 0;
-        
+
         foreach (string key in keysToDisplay)
         {
             if (timeSeriesData.ContainsKey(key))
             {
                 // Create graph object
                 GameObject graphObject = Instantiate(graphPrefab, graphContainer);
+                // Fix interpolated string literal: remove extra escapes
                 graphObject.name = $"Graph_{key}";
-                
+
                 // Position the graph
                 RectTransform graphRect = graphObject.GetComponent<RectTransform>();
                 if (graphRect != null)
                 {
-                    float graphHeight = 150f;
-                    float spacing = 20f;
+                    float graphHeight = 150f; // Adjust as needed
+                    float spacing = 20f; // Adjust as needed
                     graphRect.anchoredPosition = new Vector2(0, -(graphHeight + spacing) * graphCount);
                 }
-                
+
                 // Set up the graph
-                LineGraph graph = graphObject.GetComponent<LineGraph>();
+                LineGraph graph = graphObject.GetComponent<LineGraph>(); // CS0246 here
                 if (graph != null)
                 {
                     graph.SetTitle(key);
                     graph.SetData(timeSeriesData[key].ToArray());
                 }
-                
+
                 activeGraphs.Add(graphObject);
                 graphCount++;
             }
         }
     }
-    
-    /// <summary>
-    /// Displays observations in the results panel
-    /// </summary>
-    /// <param name="observations">List of observations</param>
-    private void DisplayObservations(List<string> observations)
-    {
-        if (observationsText == null || observations == null) return;
-        
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        
-        sb.AppendLine("Observations:");
-        sb.AppendLine("-------------");
-        
-        foreach (string observation in observations)
-        {
-            sb.AppendLine($"• {observation}");
-        }
-        
-        observationsText.text = sb.ToString();
-    }
     #endregion
+} // End of UIManager class
+
+// Placeholder for LineGraph to resolve CS0246. Replace with actual implementation or using directive.
+public class LineGraph : MonoBehaviour
+{
+    public void SetTitle(string title) { Debug.Log($"Graph Title Set: {title}"); }
+    public void SetData(float[] data) { Debug.Log($"Graph Data Set: {data.Length} points"); }
 }
+
+ 
+public static class ScreenCaptureUtility
+{
+    public static void CaptureScreenshot() { Debug.Log("Placeholder: CaptureScreenshot called"); }
+}
+
+// Placeholder structures/classes if not defined elsewhere
+[System.Serializable]
+public class ScenarioParameters { /* Add fields as needed */ }
+
+

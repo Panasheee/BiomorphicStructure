@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BiomorphicSim.Core;
 
 /// <summary>
 /// Main controller script that initializes and coordinates all components of the morphology simulator.
@@ -146,12 +147,9 @@ public class MainController : MonoBehaviour
         }
         
         // Load morphology data
-        MorphologyData morphologyData = dataIO.LoadMorphology(fileName);
-        if (morphologyData != null)
-        {
-            morphologyGenerator.ImportMorphologyData(morphologyData);
-            morphologyManager.OnMorphologyGenerationComplete(morphologyData);
-        }
+        BiomorphicSim.Core.MorphologyData morphologyData = dataIO.LoadMorphology(fileName);
+        morphologyGenerator.ImportMorphologyData(morphologyData);
+        morphologyManager.OnMorphologyGenerationComplete(morphologyData);
         
         Debug.Log($"Simulation loaded from {fileName}");
     }
@@ -167,13 +165,12 @@ public class MainController : MonoBehaviour
             Debug.LogError("Cannot save simulation: DataIO not found");
             return;
         }
-        
-        // Save settings
+          // Save settings
         SimulationSettings currentSettings = morphologyManager.GetCurrentSettings();
         dataIO.SaveSettings(currentSettings, fileName);
         
         // Export morphology data if available
-        MorphologyData morphologyData = morphologyGenerator.ExportMorphologyData();
+        BiomorphicSim.Core.MorphologyData morphologyData = morphologyGenerator.ExportMorphologyData();
         if (morphologyData != null)
         {
             dataIO.SaveMorphology(morphologyData, fileName);
@@ -348,21 +345,20 @@ public class MainController : MonoBehaviour
             GenerateLambtonQuaySite();
             yield return new WaitForSeconds(1f);
         }
-        
-        if (zonePositions.Length > 0)
+          if (zonePositions.Length > 0)
         {
             Bounds zone = new Bounds(zonePositions[0], zoneSizes[0]);
             morphologyManager.SetSelectedZone(zone);
             yield return new WaitForSeconds(0.5f);
         }
         
-        MorphologyParameters parameters = new MorphologyParameters
+        BiomorphicSim.Core.MorphologyParameters parameters = new BiomorphicSim.Core.MorphologyParameters
         {
             density = 0.6f,
             complexity = 0.7f,
             connectivity = 0.5f,
-            biomorphType = MorphologyParameters.BiomorphType.Mold,
-            growthPattern = MorphologyParameters.GrowthPattern.Adaptive
+            biomorphType = BiomorphicSim.Core.MorphologyParameters.BiomorphType.Mold,
+            growthPattern = BiomorphicSim.Core.MorphologyParameters.GrowthPattern.Adaptive
         };
         
         morphologyManager.GenerateMorphology(parameters);
@@ -420,21 +416,20 @@ public class MainController : MonoBehaviour
             GenerateLambtonQuaySite();
             yield return new WaitForSeconds(1f);
         }
-        
-        if (zonePositions.Length > 1)
+          if (zonePositions.Length > 1)
         {
             Bounds zone = new Bounds(zonePositions[1], zoneSizes[1]);
             morphologyManager.SetSelectedZone(zone);
             yield return new WaitForSeconds(0.5f);
         }
         
-        MorphologyParameters parameters = new MorphologyParameters
+        BiomorphicSim.Core.MorphologyParameters parameters = new BiomorphicSim.Core.MorphologyParameters
         {
             density = 0.4f,
             complexity = 0.6f,
             connectivity = 0.6f,
-            biomorphType = MorphologyParameters.BiomorphType.Bone,
-            growthPattern = MorphologyParameters.GrowthPattern.Directed
+            biomorphType = BiomorphicSim.Core.MorphologyParameters.BiomorphType.Bone,
+            growthPattern = BiomorphicSim.Core.MorphologyParameters.GrowthPattern.Directed
         };
         
         morphologyManager.GenerateMorphology(parameters);
@@ -484,19 +479,18 @@ public class MainController : MonoBehaviour
     /// Demonstration comparing different bio-types
     /// </summary>
     private IEnumerator BioTypeComparisonDemo()
-    {
-        if (siteGenerator.GetSiteBounds().size == Vector3.zero)
+    {        if (siteGenerator.GetSiteBounds().size == Vector3.zero)
         {
             GenerateLambtonQuaySite();
             yield return new WaitForSeconds(1f);
         }
         
-        MorphologyParameters.BiomorphType[] types = new MorphologyParameters.BiomorphType[]
+        BiomorphicSim.Core.MorphologyParameters.BiomorphType[] types = new BiomorphicSim.Core.MorphologyParameters.BiomorphType[]
         {
-            MorphologyParameters.BiomorphType.Mold,
-            MorphologyParameters.BiomorphType.Bone,
-            MorphologyParameters.BiomorphType.Coral,
-            MorphologyParameters.BiomorphType.Mycelium
+            BiomorphicSim.Core.MorphologyParameters.BiomorphType.Mold,
+            BiomorphicSim.Core.MorphologyParameters.BiomorphType.Bone,
+            BiomorphicSim.Core.MorphologyParameters.BiomorphType.Coral,
+            BiomorphicSim.Core.MorphologyParameters.BiomorphType.Mycelium
         };
         
         ScenarioData commonScenario = new ScenarioData
@@ -519,19 +513,18 @@ public class MainController : MonoBehaviour
         for (int i = 0; i < types.Length; i++)
         {
             if (zonePositions.Length > 0)
-            {
-                Bounds zone = new Bounds(zonePositions[0], zoneSizes[0]);
+            {                Bounds zone = new Bounds(zonePositions[0], zoneSizes[0]);
                 morphologyManager.SetSelectedZone(zone);
                 yield return new WaitForSeconds(0.5f);
             }
             
-            MorphologyParameters parameters = new MorphologyParameters
+            BiomorphicSim.Core.MorphologyParameters parameters = new BiomorphicSim.Core.MorphologyParameters
             {
                 density = 0.5f,
                 complexity = 0.5f,
                 connectivity = 0.5f,
                 biomorphType = types[i],
-                growthPattern = MorphologyParameters.GrowthPattern.Organic
+                growthPattern = BiomorphicSim.Core.MorphologyParameters.GrowthPattern.Organic
             };
             
             morphologyManager.GenerateMorphology(parameters);
@@ -610,16 +603,15 @@ public class MainController : MonoBehaviour
             Bounds zone = new Bounds(siteCenter, zoneSize);
             morphologyManager.SetSelectedZone(zone);
         }
+          yield return new WaitForSeconds(1f);
         
-        yield return new WaitForSeconds(1f);
-        
-        MorphologyParameters parameters = new MorphologyParameters
+        BiomorphicSim.Core.MorphologyParameters parameters = new BiomorphicSim.Core.MorphologyParameters
         {
             density = 0.7f,
             complexity = 0.8f,
             connectivity = 0.6f,
-            biomorphType = MorphologyParameters.BiomorphType.Custom,
-            growthPattern = MorphologyParameters.GrowthPattern.Adaptive
+            biomorphType = BiomorphicSim.Core.MorphologyParameters.BiomorphType.Custom,
+            growthPattern = BiomorphicSim.Core.MorphologyParameters.GrowthPattern.Adaptive
         };
         
         morphologyManager.GenerateMorphology(parameters);

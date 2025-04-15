@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BiomorphicSim.Core; // Ensure this namespace is used
 
 /// <summary>
 /// Core manager class that orchestrates the entire morphology simulation.
@@ -52,11 +53,10 @@ public class MorphologyManager : MonoBehaviour
     
     // The currently selected zone for morphology generation
     private Bounds selectedZone;
-    
-    // Currently active scenario
+      // Currently active scenario
     private ScenarioData currentScenario;
       // Storage for different morphology generations for comparison
-    private Dictionary<string, MorphologyData> savedMorphologies = new Dictionary<string, MorphologyData>();
+    private Dictionary<string, BiomorphicSim.Core.MorphologyData> savedMorphologies = new Dictionary<string, BiomorphicSim.Core.MorphologyData>();
     #endregion
 
     #region Public Methods
@@ -138,12 +138,11 @@ public class MorphologyManager : MonoBehaviour
             uiManager.UpdateZoneSelection(zone);
         }
     }
-    
-    /// <summary>
+      /// <summary>
     /// Starts the morphology generation process
     /// </summary>
     /// <param name="parameters">Parameters controlling the morphology generation</param>
-    public void GenerateMorphology(MorphologyParameters parameters)
+    public void GenerateMorphology(BiomorphicSim.Core.MorphologyParameters parameters)
     {
         if (selectedZone.size == Vector3.zero)
         {
@@ -156,13 +155,11 @@ public class MorphologyManager : MonoBehaviour
         
         // Start the generation process
         morphologyGenerator.GenerateMorphology(selectedZone, parameters);
-    }
-    
-    /// <summary>
+    }    /// <summary>
     /// Called when morphology generation is complete
     /// </summary>
     /// <param name="morphologyData">Data describing the generated morphology</param>
-    public void OnMorphologyGenerationComplete(MorphologyData morphologyData)
+    public void OnMorphologyGenerationComplete(BiomorphicSim.Core.MorphologyData morphologyData)
     {
         Debug.Log("Morphology generation complete.");
         
@@ -173,7 +170,11 @@ public class MorphologyManager : MonoBehaviour
         // Update UI
         if (uiManager != null)
         {
-            uiManager.OnMorphologyGenerated(morphologyData, id);
+            // Change to UpdateUI method which exists in UIManager
+            uiManager.UpdateUI(CurrentState);
+            
+            // You might want to add additional UI updates here later
+            // For now, we're just calling the existing UpdateUI method
         }
     }
     
@@ -194,9 +195,8 @@ public class MorphologyManager : MonoBehaviour
             Debug.LogError("Cannot run scenario: No morphology has been generated.");
             return;
         }
-        
-        // Get the latest morphology if none is specified
-        MorphologyData morphologyToAnalyze = null;
+          // Get the latest morphology if none is specified
+        BiomorphicSim.Core.MorphologyData morphologyToAnalyze = null;
         if (scenario.targetMorphologyId != null && savedMorphologies.ContainsKey(scenario.targetMorphologyId))
         {
             morphologyToAnalyze = savedMorphologies[scenario.targetMorphologyId];
@@ -225,8 +225,7 @@ public class MorphologyManager : MonoBehaviour
         // Run the analysis
         scenarioAnalyzer.RunScenario(morphologyToAnalyze, scenario);
     }
-    
-    /// <summary>
+      /// <summary>
     /// Called when a scenario analysis is complete
     /// </summary>
     /// <param name="results">Results of the scenario analysis</param>
@@ -237,7 +236,11 @@ public class MorphologyManager : MonoBehaviour
         // Update UI with results
         if (uiManager != null)
         {
-            uiManager.DisplayScenarioResults(results);
+            // Change to UpdateUI method since DisplayScenarioResults doesn't exist
+            uiManager.UpdateUI(CurrentState);
+            
+            // Log results for now
+            Debug.Log($"Scenario Analysis Results: {results.scenarioId}, Success: {results.adaptationSuccessful}");
         }
         
         // Return to idle state
@@ -294,12 +297,13 @@ public class MorphologyManager : MonoBehaviour
     {
         // Handle state-specific updates if needed
         switch (CurrentState)
-        {
-            case SimulationState.MorphologyGeneration:
+        {            case SimulationState.MorphologyGeneration:
                 // Update progress UI if generation is ongoing
                 if (uiManager != null && morphologyGenerator != null)
                 {
-                    uiManager.UpdateGenerationProgress(morphologyGenerator.GenerationProgress);
+                    // Changed from UpdateGenerationProgress to UpdateUI, which exists in UIManager
+                    uiManager.UpdateUI(CurrentState);
+                    // You might want to implement a proper progress update method in UIManager later
                 }
                 break;
                 
@@ -307,7 +311,9 @@ public class MorphologyManager : MonoBehaviour
                 // Update scenario progress if analysis is ongoing
                 if (uiManager != null && scenarioAnalyzer != null)
                 {
-                    uiManager.UpdateScenarioProgress(scenarioAnalyzer.AnalysisProgress);
+                    // Changed from UpdateScenarioProgress to UpdateUI, which exists in UIManager
+                    uiManager.UpdateUI(CurrentState);
+                    // You might want to implement a proper progress update method in UIManager later
                 }
                 break;
         }

@@ -280,9 +280,9 @@ public class VisualizationPanel : MonoBehaviour
             visualizationManager.ExportCurrentView();
         }
     }
-    
-    private void OnResetViewButtonClicked()
-    {        if (visualizationManager != null)
+      private void OnResetViewButtonClicked()
+    {
+        if (visualizationManager != null)
         {
             // Get all nodes to frame
             MorphNode[] nodes = FindObjectsByType<MorphNode>(FindObjectsSortMode.None);

@@ -31,13 +31,14 @@ public class SiteSelectionPanel : MonoBehaviour
     // Current site
     private int currentSiteIndex = -1;
     private bool isSiteLoading = false;
-    
-    // Events
+      // Events
     public delegate void SiteChangedHandler(SiteData site);
     public event SiteChangedHandler OnSiteChanged;
     #endregion
 
-    #region Unity Methods    private void Awake()
+    #region Unity Methods
+    
+    private void Awake()
     {
         // Find references if not assigned
         if (environmentManager == null)

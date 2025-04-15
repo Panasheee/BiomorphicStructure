@@ -46,13 +46,14 @@ public class ScenarioPanel : MonoBehaviour
     private List<SimulationScenario> availableScenarios = new List<SimulationScenario>();
     private SimulationScenario currentScenario = new SimulationScenario();
     private bool isLoadingScenario = false;
-    
-    // Events
+      // Events
     public delegate void ScenarioChangedHandler(SimulationScenario scenario);
     public event ScenarioChangedHandler OnScenarioChanged;
     #endregion
 
-    #region Unity Methods    private void Awake()
+    #region Unity Methods
+    
+    private void Awake()
     {
         // Find references if not assigned
         if (environmentManager == null)

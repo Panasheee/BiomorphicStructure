@@ -40,6 +40,12 @@ public class EnvironmentManager : MonoBehaviour
     
     // Singleton instance
     public static EnvironmentManager Instance { get; private set; }
+
+    // Added property for current date/time
+    public System.DateTime CurrentDateTime
+    {
+        get { return currentState.dateTime; }
+    }
     #endregion
 
     #region Unity Methods
@@ -195,77 +201,199 @@ public class EnvironmentManager : MonoBehaviour
         // Notify listeners
         OnEnvironmentUpdated?.Invoke(new Dictionary<string, float>(environmentalFactors));
     }
-    
+
     /// <summary>
-    /// Gets the current value of an environmental factor
+    /// Sets the geographic location (latitude and longitude).
     /// </summary>
-    /// <param name="factorName">Name of the factor</param>
-    /// <returns>Current value, or 0 if not found</returns>
-    public float GetEnvironmentalFactor(string factorName)
+    public void SetGeographicLocation(float latitude, float longitude)
     {
-        if (environmentalFactors.TryGetValue(factorName, out float value))
+        this.latitude = latitude;
+        this.longitude = longitude;
+        if (sunlightSystem != null)
         {
-            return value;
+            sunlightSystem.SetLocation(latitude, longitude);
         }
-        return 0f;
+        Debug.Log($"Set geographic location to Lat: {latitude}, Lon: {longitude}");
     }
-    
+
     /// <summary>
-    /// Gets all current environmental factors
+    /// Sets additional location data (placeholder).
     /// </summary>
-    /// <returns>Dictionary of all environmental factors</returns>
-    public Dictionary<string, float> GetAllEnvironmentalFactors()
+    public void SetLocationData(string name, float elevation, float urbanDensity)
     {
-        return new Dictionary<string, float>(environmentalFactors);
+        // Placeholder: Store or use this data as needed
+        Debug.Log($"Set location data - Name: {name}, Elevation: {elevation}, Urban Density: {urbanDensity}");
     }
-    
+
     /// <summary>
-    /// Gets the current environment state
+    /// Sets the simulation time scale.
     /// </summary>
-    /// <returns>Current environment state</returns>
-    public EnvironmentState GetCurrentState()
+    public void SetTimeScale(float scale)
     {
-        return currentState;
-    }
-    
-    /// <summary>
-    /// Sets the environment state from a scenario
+        if (weatherSystem != null) weatherSystem.SetTimeScale(scale);
+        if (pedestrianFlowSystem != null) pedestrianFlowSystem.SetTimeScale(scale);
+        if (sunlightSystem != null) sunlightSystem.SetTimeScale(scale);
+        Debug.Log($"Set time scale to {scale}x");
+    }    /// <summary>
+    /// Pauses or resumes the environment simulation.
     /// </summary>
-    /// <param name="scenarioData">Scenario data containing environmental factors</param>
-    public void SetEnvironmentFromScenario(ScenarioData scenarioData)
+    public void SetPaused(bool paused)
     {
-        if (scenarioData.environmentalFactors != null)
+        isEnvironmentActive = !paused;
+        if (weatherSystem != null)
         {
-            // Clear existing factors
-            environmentalFactors.Clear();
-            
-            // Add scenario factors
-            foreach (var factor in scenarioData.environmentalFactors)
-            {
-                environmentalFactors[factor.Key] = factor.Value;
-            }
-            
-            // Update systems
-            UpdateEnvironmentSystems();
-            
-            // Notify listeners
-            OnEnvironmentUpdated?.Invoke(new Dictionary<string, float>(environmentalFactors));
-            
-            Debug.Log($"Environment set from scenario: {scenarioData.scenarioName}");
+            // Use StartSimulation/StopSimulation instead of SetPaused
+            if (paused)
+                weatherSystem.StopSimulation();
+            else
+                weatherSystem.StartSimulation();
         }
+        if (pedestrianFlowSystem != null)
+        {
+            // Use StartSimulation/StopSimulation instead of SetPaused
+            if (paused)
+                pedestrianFlowSystem.StopSimulation();
+            else
+                pedestrianFlowSystem.StartSimulation();
+        }
+        if (sunlightSystem != null)
+        {
+            // Use StartSimulation/StopSimulation instead of SetPaused
+            if (paused)
+                sunlightSystem.StopSimulation();
+            else
+                sunlightSystem.StartSimulation();
+        }
+        Debug.Log($"Environment simulation {(paused ? "paused" : "resumed")}");
     }
-    
+
     /// <summary>
-    /// Toggle between realistic and manual environment control
+    /// Sets the current date and time for the simulation.
     /// </summary>
-    /// <param name="useRealistic">Whether to use realistic simulation</param>
-    public void SetRealisticEnvironment(bool useRealistic)
+    public void SetDateTime(System.DateTime dateTime)
+    {
+        currentState.dateTime = dateTime;
+        if (weatherSystem != null) weatherSystem.SetDateTime(dateTime);
+        if (pedestrianFlowSystem != null) pedestrianFlowSystem.SetDateTime(dateTime);
+        if (sunlightSystem != null) sunlightSystem.SetDateTime(dateTime);
+        Debug.Log($"Set simulation date/time to {dateTime}");
+    }
+
+    /// <summary>
+    /// Sets manual weather conditions based on individual parameters.
+    /// </summary>
+    public void SetManualWeather(float temperature, float windSpeed, float humidity, float pedestrianDensity, float sunlightIntensity, bool isRaining, int season)
+    {
+        // This method seems designed to set multiple factors at once from ScenarioPanel
+        // We can update the internal state and potentially the factors dictionary
+        SetTemperature(temperature);
+        SetWindSpeed(windSpeed);
+        SetHumidity(humidity);
+        SetPedestrianDensity(pedestrianDensity);
+        SetSunlightIntensity(sunlightIntensity);
+        SetRaining(isRaining);
+        SetSeason(season);
+
+        // Ensure systems reflect manual settings if not using realistic mode
+        UpdateEnvironmentSystems();
+        Debug.Log("Set manual weather conditions from scenario.");
+    }
+
+    /// <summary>
+    /// Sets whether to use realistic weather simulation.
+    /// </summary>
+    public void SetUseRealisticWeather(bool useRealistic)
     {
         useRealisticWeather = useRealistic;
+        // We might need separate flags if we want independent control
         useRealisticSunlight = useRealistic;
         useRealisticPedestrianFlow = useRealistic;
-        
-        Debug.Log($"Set environment to {(useRealistic ? "realistic" : "manual")} mode");
+        Debug.Log($"Set realistic weather mode to: {useRealistic}");
+        if (!useRealistic)
+        {
+            // If switching to manual, apply current manual values
+            UpdateEnvironmentSystems();
+        }
+    }    /// <summary>
+    /// Sets the manual temperature.
+    /// </summary>
+    public void SetTemperature(float value)
+    {
+        currentState.temperature = value;
+        SetEnvironmentalFactor("Temperature", Mathf.Clamp01((value + 10) / 40f));
+        if (!useRealisticWeather && weatherSystem != null) 
+        {
+            // Create weather state with the updated temperature
+            WeatherState state = weatherSystem.GetCurrentWeather();
+            state.temperature = value;
+            weatherSystem.SetManualWeather(state);
+        }
+    }
+
+    /// <summary>
+    /// Sets the manual wind speed.
+    /// </summary>
+    public void SetWindSpeed(float value)
+    {
+        currentState.windSpeed = value;
+        SetEnvironmentalFactor("Wind", Mathf.Clamp01(value / 50f));
+        if (!useRealisticWeather && weatherSystem != null) 
+        {
+            // Create weather state with the updated wind speed
+            WeatherState state = weatherSystem.GetCurrentWeather();
+            state.windSpeed = value;
+            weatherSystem.SetManualWeather(state);
+        }
+    }
+
+    /// <summary>
+    /// Sets the manual humidity.
+    /// </summary>
+    public void SetHumidity(float value)
+    {
+        currentState.humidity = Mathf.Clamp01(value);
+        SetEnvironmentalFactor("Humidity", currentState.humidity);
+        if (!useRealisticWeather && weatherSystem != null) weatherSystem.SetManualHumidity(currentState.humidity);
+    }
+
+    /// <summary>
+    /// Sets the manual pedestrian density.
+    /// </summary>
+    public void SetPedestrianDensity(float value)
+    {
+        currentState.pedestrianDensity = Mathf.Clamp01(value);
+        SetEnvironmentalFactor("PedestrianDensity", currentState.pedestrianDensity);
+        if (!useRealisticPedestrianFlow && pedestrianFlowSystem != null) pedestrianFlowSystem.SetManualDensity(currentState.pedestrianDensity);
+    }
+
+    /// <summary>
+    /// Sets the manual sunlight intensity.
+    /// </summary>
+    public void SetSunlightIntensity(float value)
+    {
+        currentState.sunlightIntensity = Mathf.Clamp01(value);
+        SetEnvironmentalFactor("SunlightIntensity", currentState.sunlightIntensity);
+        if (!useRealisticSunlight && sunlightSystem != null) sunlightSystem.SetManualIntensity(currentState.sunlightIntensity);
+    }
+
+    /// <summary>
+    /// Sets whether it is manually raining.
+    /// </summary>
+    public void SetRaining(bool value)
+    {
+        currentState.rainIntensity = value ? 0.5f : 0f; // Assuming 0.5 for rain on
+        // SetEnvironmentalFactor("RainIntensity", currentState.rainIntensity); // Need to add this factor if used
+        if (!useRealisticWeather && weatherSystem != null) weatherSystem.SetManualRaining(value);
+    }
+
+    /// <summary>
+    /// Sets the manual season (placeholder for potential effects).
+    /// </summary>
+    public void SetSeason(int value)
+    {
+        // Placeholder: Store season, potentially affect other factors like temp/sunlight
+        Debug.Log($"Set manual season to: {(Season)value}");
+        // Example: if (!useRealisticWeather) { /* adjust temp based on season */ }
     }
     #endregion
 
@@ -362,63 +490,32 @@ public class EnvironmentManager : MonoBehaviour
     private void UpdateEnvironmentSystems()
     {
         // Only update systems when in manual mode
-        
+
         if (weatherSystem != null && !useRealisticWeather)
         {
-            WeatherState weatherState = new WeatherState();
-            
-            if (environmentalFactors.TryGetValue("Wind", out float windValue))
-            {
-                weatherState.windSpeed = windValue * 50f; // Convert 0-1 to 0-50 km/h
-            }
-            
-            if (environmentalFactors.TryGetValue("Temperature", out float tempValue))
-            {
-                weatherState.temperature = tempValue * 40f - 10f; // Convert 0-1 to -10 to 30 C
-            }
-            
-            if (environmentalFactors.TryGetValue("Humidity", out float humidityValue))
-            {
-                weatherState.humidity = humidityValue;
-            }
-            
-            weatherSystem.SetManualWeather(weatherState);
+            // Use the new individual SetManual methods if they exist in WeatherSystem
+            // Otherwise, construct a WeatherState and use SetManualWeather(WeatherState)
+            weatherSystem.SetManualTemperature(currentState.temperature);
+            weatherSystem.SetManualWindSpeed(currentState.windSpeed);
+            weatherSystem.SetManualHumidity(currentState.humidity);
+            weatherSystem.SetManualRaining(currentState.rainIntensity > 0);
+            // Assuming WeatherSystem has these methods, otherwise adapt
         }
-        
+
         if (sunlightSystem != null && !useRealisticSunlight)
         {
-            SunlightState sunlightState = new SunlightState();
-            
-            if (environmentalFactors.TryGetValue("SunlightIntensity", out float intensityValue))
-            {
-                sunlightState.intensity = intensityValue;
-            }
-            
-            if (environmentalFactors.TryGetValue("SunlightDirection", out float directionValue))
-            {
-                float angle = directionValue * 180f;
-                sunlightState.direction = Quaternion.Euler(angle, 0, 0) * Vector3.down;
-            }
-            
-            sunlightSystem.SetManualSunlight(sunlightState);
+            // Use the new individual SetManual methods if they exist in SunlightSimulator
+            sunlightSystem.SetManualIntensity(currentState.sunlightIntensity);
+            // sunlightSystem.SetManualDirection(...); // Need to handle direction if controlled manually
+            // Assuming SunlightSimulator has these methods, otherwise adapt
         }
-        
+
         if (pedestrianFlowSystem != null && !useRealisticPedestrianFlow)
         {
-            PedestrianState pedestrianState = new PedestrianState();
-            
-            if (environmentalFactors.TryGetValue("PedestrianDensity", out float densityValue))
-            {
-                pedestrianState.density = densityValue;
-            }
-            
-            if (environmentalFactors.TryGetValue("PedestrianDirection", out float directionValue))
-            {
-                float angle = directionValue * 180f;
-                pedestrianState.flowDirection = Quaternion.Euler(0, angle, 0) * Vector3.right;
-            }
-            
-            pedestrianFlowSystem.SetManualPedestrianFlow(pedestrianState);
+            // Use the new individual SetManual methods if they exist in PedestrianFlow
+            pedestrianFlowSystem.SetManualDensity(currentState.pedestrianDensity);
+            // pedestrianFlowSystem.SetManualDirection(...); // Need to handle direction if controlled manually
+            // Assuming PedestrianFlow has these methods, otherwise adapt
         }
     }
     #endregion

@@ -29,6 +29,42 @@ public class AdaptationSystem : MonoBehaviour
     private Dictionary<MorphNode, Vector3> nodeForces = new Dictionary<MorphNode, Vector3>();
     private Dictionary<MorphNode, float> nodeStresses = new Dictionary<MorphNode, float>();
     private MorphologyParameters adaptationParameters;
+    private int totalAdaptationsPerformed = 0; // Added counter
+    private bool autoAdaptationEnabled = true; // Added state for SetAutoAdaptation
+    private bool stressVisualizationEnabled = false; // Added state for SetStressVisualization
+    private bool adaptationVisualizationEnabled = false; // Added state for SetAdaptationVisualization
+    private bool growthPotentialVisualizationEnabled = false; // Added state for SetGrowthPotentialVisualization
+    private float visualizationScale = 1.0f; // Added state for SetVisualizationScale
+    #endregion
+
+    #region Public Properties // Added section for public properties
+    /// <summary>
+    /// Gets the current number of nodes being managed by the adaptation system.
+    /// </summary>
+    public int NodeCount => nodes.Count;
+
+    /// <summary>
+    /// Gets the current number of connections being managed by the adaptation system.
+    /// </summary>
+    public int ConnectionCount => connections.Count;
+
+    /// <summary>
+    /// Gets the total number of adaptations performed since initialization.
+    /// </summary>
+    public int AdaptationCount => totalAdaptationsPerformed;
+
+    /// <summary>
+    /// Gets a score representing the structural stability (placeholder).
+    /// </summary>
+    public float StabilityScore
+    {
+        get
+        {
+            // Placeholder implementation: Lower average stress = higher stability
+            if (nodes.Count == 0) return 1.0f;
+            return Mathf.Clamp01(1.0f - GetAverageStress() * 0.5f);
+        }
+    }
     #endregion
 
     #region Public Methods
@@ -84,6 +120,8 @@ public class AdaptationSystem : MonoBehaviour
     /// <returns>The total amount of adaptation that occurred</returns>
     public float AdaptationStep(float deltaTime)
     {
+        if (!autoAdaptationEnabled) return 0f; // Check if auto-adaptation is enabled
+
         // Scale adaptation by time and rate
         float adaptationAmount = deltaTime * adaptationRate;
         
@@ -96,24 +134,25 @@ public class AdaptationSystem : MonoBehaviour
             case MorphologyParameters.BiomorphType.Mold:
                 totalAdaptation += PerformMoldAdaptation(adaptationAmount);
                 break;
-                
+
             case MorphologyParameters.BiomorphType.Bone:
                 totalAdaptation += PerformBoneAdaptation(adaptationAmount);
                 break;
-                
+
             case MorphologyParameters.BiomorphType.Coral:
                 totalAdaptation += PerformCoralAdaptation(adaptationAmount);
                 break;
-                
+
             case MorphologyParameters.BiomorphType.Mycelium:
                 totalAdaptation += PerformMyceliumAdaptation(adaptationAmount);
                 break;
-                
+
             case MorphologyParameters.BiomorphType.Custom:
                 totalAdaptation += PerformCustomAdaptation(adaptationAmount);
                 break;
         }
-        
+
+        totalAdaptationsPerformed += Mathf.RoundToInt(totalAdaptation); // Increment counter based on adaptation amount
         return totalAdaptation;
     }
     
@@ -159,6 +198,55 @@ public class AdaptationSystem : MonoBehaviour
         }
         
         return totalStress / nodes.Count;
+    }
+
+    /// <summary>
+    /// Enables or disables automatic adaptation steps.
+    /// </summary>
+    public void SetAutoAdaptation(bool enabled)
+    {
+        autoAdaptationEnabled = enabled;
+        Debug.Log($"Auto Adaptation {(enabled ? "Enabled" : "Disabled")}");
+    }
+
+    /// <summary>
+    /// Enables or disables stress visualization (placeholder).
+    /// </summary>
+    public void SetStressVisualization(bool enabled)
+    {
+        stressVisualizationEnabled = enabled;
+        Debug.Log($"Stress Visualization {(enabled ? "Enabled" : "Disabled")}");
+        // Placeholder: In a real implementation, this would trigger visual updates
+    }
+
+    /// <summary>
+    /// Enables or disables adaptation visualization (placeholder).
+    /// </summary>
+    public void SetAdaptationVisualization(bool enabled)
+    {
+        adaptationVisualizationEnabled = enabled;
+        Debug.Log($"Adaptation Visualization {(enabled ? "Enabled" : "Disabled")}");
+        // Placeholder: In a real implementation, this would trigger visual updates
+    }
+
+    /// <summary>
+    /// Enables or disables growth potential visualization (placeholder).
+    /// </summary>
+    public void SetGrowthPotentialVisualization(bool enabled)
+    {
+        growthPotentialVisualizationEnabled = enabled;
+        Debug.Log($"Growth Potential Visualization {(enabled ? "Enabled" : "Disabled")}");
+        // Placeholder: In a real implementation, this would trigger visual updates
+    }
+
+    /// <summary>
+    /// Sets the scale for visualizations (placeholder).
+    /// </summary>
+    public void SetVisualizationScale(float scale)
+    {
+        visualizationScale = scale;
+        Debug.Log($"Visualization Scale set to {scale}");
+        // Placeholder: In a real implementation, this would affect visual elements
     }
     #endregion
 
@@ -457,12 +545,12 @@ public class AdaptationSystem : MonoBehaviour
                         {
                             CreateConnection(nodes[nodes.Count - plateNodes], nodes[nodes.Count - 1]);
                         }
-                        
+
                         totalAdaptation += plateNodes;
                     }
                     else
                     {
-                        // Connect to nearby existing nodes 
+                        // Connect to nearby existing nodes
                         ConnectToNearbyNodes(newNode, adaptationParameters.connectivity * 0.5f);
                     }
                     
@@ -677,7 +765,8 @@ public class AdaptationSystem : MonoBehaviour
         nodes.Add(node);
         nodeForces[node] = Vector3.zero;
         nodeStresses[node] = 0f;
-        
+        // totalAdaptationsPerformed++; // Creating a node isn't necessarily an adaptation itself
+
         return node;
     }
     

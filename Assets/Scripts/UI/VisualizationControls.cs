@@ -610,36 +610,44 @@ public class VisualizationManager : MonoBehaviour
 
     #region Private Methods
     /// <summary>
-    /// Applies the current visualization style
+    /// Applies the current visualization style settings to relevant components
     /// </summary>
-    private void ApplyCurrentStyle()
+    public void ApplyCurrentStyle() // Changed from private/protected to public
     {
-        if (currentStyle == null) return;
-        
-        // Apply global rendering settings
-        if (mainLight != null)
+        if (currentStyle == null)
         {
-            mainLight.color = currentStyle.ambientLightColor;
-            mainLight.intensity = currentStyle.lightIntensity;
+            Debug.LogWarning("Cannot apply style: No current style set");
+            return;
         }
         
-        // Set background color
+        // Apply camera settings
         if (mainCamera != null)
         {
             mainCamera.backgroundColor = currentStyle.backgroundColor;
+            // Apply post-processing effects if defined in the style
         }
-          // Find all nodes and connections to update
-        MorphNode[] allNodes = FindObjectsByType<MorphNode>(FindObjectsSortMode.None);
-        MorphConnection[] allConnections = FindObjectsByType<MorphConnection>(FindObjectsSortMode.None);
         
-        // Create mapping without needing a ScenarioAnalyzer reference
-        Dictionary<MorphNode, float> dummyStresses = new Dictionary<MorphNode, float>();
+        // Apply lighting settings
+        if (mainLight != null)
+        {
+            mainLight.color = currentStyle.lightColor;
+            mainLight.intensity = currentStyle.lightIntensity;
+        }
         
-        // Apply to all nodes and connections
-        List<MorphNode> nodesList = new List<MorphNode>(allNodes);
-        List<MorphConnection> connectionsList = new List<MorphConnection>(allConnections);
+        // Apply material settings (This might need more complex logic depending on how materials are managed)
+        // For now, let's assume we update properties on existing materials or swap them
+        // This part needs integration with how nodes/connections get their materials
         
-        UpdateVisualization(nodesList, connectionsList, dummyStresses);
+        // Update global settings based on style
+        stressColorIntensity = currentStyle.stressColorIntensity;
+        adaptationColorIntensity = currentStyle.adaptationColorIntensity;
+        nodeThicknessMultiplier = currentStyle.nodeThicknessMultiplier;
+        connectionThicknessMultiplier = currentStyle.connectionThicknessMultiplier;
+        glowIntensity = currentStyle.glowIntensity;
+        transparencyLevel = currentStyle.transparencyLevel;
+        
+        // Trigger a visual update if necessary (e.g., if morphology already exists)
+        // MorphologyManager.Instance?.UpdateMorphologyVisualization(); 
     }
     
     /// <summary>
@@ -1057,5 +1065,5 @@ public class VisualizationStyle
     public bool usePostProcessing = false;
     public bool useShadows = true;
     public bool useReflections = false;
- }
-    #endregion
+} 
+#endregion
