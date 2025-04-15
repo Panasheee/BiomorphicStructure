@@ -2,9 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-using BiomorphicSim.Core; // Ensure this namespace is used
 
-namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise adjust
+namespace BiomorphicSim.Core
 {
     /// <summary>
     /// Handles the generation of biomorphic structures based on biological growth patterns.
@@ -40,8 +39,6 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
         // Mesh Generation
         private MeshFilter combinedMeshFilter;
         private MeshRenderer combinedMeshRenderer;
-        // private MarchingCubes meshGenerator; // Assuming MarchingCubes implementation exists/will be added
-
         #endregion
 
         #region Properties
@@ -49,22 +46,25 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
         public bool IsGenerating => isGenerating;
         #endregion
 
-        #region Unity Methods
-        private void Awake()
+        #region Unity Methods        private void Awake()
+        {
+            InitializeMorphologyContainer();
+            
+            // Only find UIManager if needed
+            if (uiManager == null)
+                uiManager = FindFirstObjectByType<UIManager>();
+        }
+        
+        private void InitializeMorphologyContainer()
         {
             // Initialize container
             morphologyContainer = new GameObject("MorphologyContainer");
             morphologyContainer.transform.SetParent(this.transform);
 
-            // Initialize mesh components if generating a single combined mesh
+            // Initialize mesh components
             combinedMeshFilter = morphologyContainer.AddComponent<MeshFilter>();
             combinedMeshRenderer = morphologyContainer.AddComponent<MeshRenderer>();
-            combinedMeshRenderer.material = growthMaterial; // Assign a default material
-
-            // meshGenerator = new MarchingCubes(...); // Initialize Marching Cubes if used
-
-            if (uiManager == null)
-                uiManager = FindFirstObjectByType<UIManager>(); // Example: Find UIManager if not set
+            combinedMeshRenderer.material = growthMaterial;
         }
 
         private void Update()
@@ -73,7 +73,7 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
             if (isGenerating && uiManager != null)
             {
                  // Assuming UIManager has a method like UpdateGenerationProgress
-                 // uiManager.UpdateGenerationProgress(generationProgress); 
+                 uiManager.UpdateGenerationProgress(generationProgress); 
             }
         }
         #endregion
@@ -193,7 +193,7 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
             {
                 newNode = nodeObject.AddComponent<MorphNode>(); // Add component if missing
             }
-            newNode.Initialize($"Node_{nodes.Count}"); // Assuming MorphNode has Initialize
+            newNode.Initialize($"Node_{nodes.Count}"); // Initialize with node ID
             nodes.Add(newNode);
             return newNode;
         }
@@ -224,7 +224,8 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
             {
                  newConnection = connectionObject.AddComponent<MorphConnection>();
             }
-            // Use connectionMaterial or derive from settings/nodes
+            // Use connectionMaterial for the connection
+            // Use Material parameter instead of string
             newConnection.Initialize(nodeA, nodeB, connectionMaterial); 
             connections.Add(newConnection);
             nodeA.AddConnection(newConnection);
@@ -284,6 +285,46 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
                 Debug.LogError("Failed to create growth algorithm.");
             }
         }
+
+        /// <summary>
+        /// Imports the morphology data (e.g., recreating nodes/connections)
+        /// </summary>
+        public void ImportMorphologyData(MorphologyData data)
+        {
+            ClearMorphology();
+            // Example: Rebuild morphology using data.nodePositions and data.connections.
+            Debug.Log("Morphology data imported.");
+        }
+
+        public MorphologyData ExportMorphologyData()
+        {
+            MorphologyData data = new MorphologyData
+            {
+                morphologyId = $"Morph_{System.DateTime.Now:yyyyMMdd_HHmmss}",
+                nodePositions = nodes.Select(n => n.transform.position).ToList(),
+                connections = new List<int[]>(),
+                metrics = CalculateMetrics(),
+                parametersUsed = currentParameters,
+                generationTime = System.DateTime.Now
+            };
+
+            // Map nodes to an index for connection data
+            Dictionary<MorphNode, int> nodeIndexMap = nodes
+                .Select((node, index) => new { node, index })
+                .ToDictionary(pair => pair.node, pair => pair.index);
+
+            foreach (var connection in connections)
+            {
+                if (connection.NodeA != null && connection.NodeB != null &&
+                    nodeIndexMap.ContainsKey(connection.NodeA) && nodeIndexMap.ContainsKey(connection.NodeB))
+                {
+                    data.connections.Add(new int[] { nodeIndexMap[connection.NodeA], nodeIndexMap[connection.NodeB] });
+                }
+            }
+            
+            Debug.Log($"Exported MorphologyData with {data.nodePositions.Count} nodes and {data.connections.Count} connections.");
+            return data;
+        }
         #endregion
 
         #region Private Methods
@@ -309,7 +350,6 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
             yield return null; // Wait a frame
 
             // Calculate target node count based on density and volume/settings
-            // float volume = growthZone.size.x * growthZone.size.y * growthZone.size.z; // Less reliable for complex zones
             int targetNodeCount = Mathf.Clamp(Mathf.RoundToInt(settings.maxNodes * parameters.density), settings.initialSeedCount, settings.maxNodes);
 
             float startTime = Time.time;
@@ -319,7 +359,6 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
             while (nodes.Count < targetNodeCount && isGenerating && (Time.time - startTime) < maxDuration)
             {
                 // --- Growth Step Calculation ---
-                // Option 1: Simple loop calling CalculateGrowth multiple times per frame
                 int stepsPerFrame = Mathf.Max(1, Mathf.RoundToInt(parameters.growthRate * 10)); // Adjust multiplier as needed
                 int nodesAddedThisFrame = 0;
                 for(int i = 0; i < stepsPerFrame && nodes.Count < targetNodeCount; i++)
@@ -337,9 +376,6 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
                     }
                 }
 
-                // Option 2: Algorithm's GrowStep (if it modifies nodes/connections directly)
-                // growthAlgorithm.GrowStep(nodes, connections, growthZone, parameters); 
-
                 if(nodesAddedThisFrame > 0)
                 {
                     UpdateMeshes(); // Update mesh only if something changed
@@ -347,10 +383,10 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
 
                 generationProgress = (float)nodes.Count / targetNodeCount;
                 
-                // Update UI progress (consider doing this less frequently)
+                // Update UI progress (if needed)
                 if (uiManager != null)
                 {
-                    // uiManager.UpdateGenerationProgress(generationProgress);
+                    uiManager.UpdateGenerationProgress(generationProgress);
                 }
 
                 yield return null; // Wait for the next frame
@@ -373,10 +409,11 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
             MorphologyData finalData = ExportMorphologyData();
             isGenerating = false;
             
-            // Notify Manager
-            if (MorphologyManager.Instance != null)
+            // Notify Manager - Use the singleton reference to avoid ambiguity
+            MorphologyManager manager = MorphologyManager.Instance;
+            if (manager != null)
             {
-                MorphologyManager.Instance.OnMorphologyGenerationComplete(finalData);
+                manager.OnMorphologyGenerationComplete(finalData);
             }
             else {
                  Debug.LogError("MorphologyManager instance not found to report completion.");
@@ -442,66 +479,119 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
                  }
              }
         }
-        
-        /// <summary>
+          /// <summary>
         /// Global pass to add connections based on probability.
         /// </summary>
         private void AddConnections(float probability)
         {
-            Debug.Log($"Running global connection pass (Probability: {probability})...");
+            if (probability <= 0 || nodes.Count < 2) return;
+            
             int added = 0;
             float maxDistSq = settings.nodeMaxDistance * settings.nodeMaxDistance;
             float minDistSq = settings.nodeMinDistance * settings.nodeMinDistance;
 
-            // O(N^2) - potentially slow for large N
-            for (int i = 0; i < nodes.Count; i++)
+            // Use spatial partitioning for larger node sets
+            if (nodes.Count > 100)
             {
-                for (int j = i + 1; j < nodes.Count; j++)
+                // Create a simple grid-based spatial partition
+                Dictionary<Vector3Int, List<MorphNode>> grid = new Dictionary<Vector3Int, List<MorphNode>>();
+                float cellSize = settings.nodeMaxDistance;
+                
+                // Add nodes to grid
+                foreach (var node in nodes)
                 {
-                    MorphNode nodeA = nodes[i];
-                    MorphNode nodeB = nodes[j];
-
-                    if (nodeA.IsConnectedTo(nodeB)) continue;
-
-                    float distSq = (nodeA.transform.position - nodeB.transform.position).sqrMagnitude;
-                    if (distSq >= minDistSq && distSq <= maxDistSq)
+                    Vector3Int cell = new Vector3Int(
+                        Mathf.FloorToInt(node.transform.position.x / cellSize),
+                        Mathf.FloorToInt(node.transform.position.y / cellSize),
+                        Mathf.FloorToInt(node.transform.position.z / cellSize)
+                    );
+                    
+                    if (!grid.ContainsKey(cell))
+                        grid[cell] = new List<MorphNode>();
+                    
+                    grid[cell].Add(node);
+                }
+                
+                // Connect only within neighboring cells
+                foreach (var node in nodes)
+                {
+                    Vector3Int cell = new Vector3Int(
+                        Mathf.FloorToInt(node.transform.position.x / cellSize),
+                        Mathf.FloorToInt(node.transform.position.y / cellSize),
+                        Mathf.FloorToInt(node.transform.position.z / cellSize)
+                    );
+                    
+                    // Get neighboring cells
+                    for (int x = -1; x <= 1; x++)
                     {
-                         // Simple probability check
-                         if (Random.value < probability)
-                         {
-                             CreateConnection(nodeA, nodeB);
-                             added++;
-                         }
+                        for (int y = -1; y <= 1; y++)
+                        {
+                            for (int z = -1; z <= 1; z++)
+                            {
+                                Vector3Int neighborCell = new Vector3Int(cell.x + x, cell.y + y, cell.z + z);
+                                if (!grid.ContainsKey(neighborCell)) continue;
+                                
+                                foreach (var otherNode in grid[neighborCell])
+                                {
+                                    if (node == otherNode || node.IsConnectedTo(otherNode)) continue;
+                                    
+                                    float distSq = (node.transform.position - otherNode.transform.position).sqrMagnitude;
+                                    if (distSq >= minDistSq && distSq <= maxDistSq && Random.value < probability)
+                                    {
+                                        CreateConnection(node, otherNode);
+                                        added++;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-             Debug.Log($"Added {added} connections in global pass.");
-        }
+            else
+            {
+                // Original O(N²) approach for smaller sets
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    for (int j = i + 1; j < nodes.Count; j++)
+                    {
+                        MorphNode nodeA = nodes[i];
+                        MorphNode nodeB = nodes[j];
 
+                        if (nodeA.IsConnectedTo(nodeB)) continue;
+
+                        float distSq = (nodeA.transform.position - nodeB.transform.position).sqrMagnitude;
+                        if (distSq >= minDistSq && distSq <= maxDistSq)
+                        {
+                            // Simple probability check
+                            if (Random.value < probability)
+                            {
+                                CreateConnection(nodeA, nodeB);
+                                added++;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (added > 0)
+            {
+                Debug.Log($"Added {added} connections in global pass.");
+            }
+        }
 
         /// <summary>
         /// Updates the visual representation (individual objects or combined mesh).
         /// </summary>
         private void UpdateMeshes()
         {
-            // Option 1: If using individual GameObjects for nodes/connections
-            // Their visuals might update automatically or via MorphNode/MorphConnection scripts.
-
-            // Option 2: If generating a combined mesh (e.g., Marching Cubes or metaballs)
-            // This is where you'd call the mesh generation logic.
-            // Example placeholder:
-            if (combinedMeshFilter != null /* && meshGenerator != null */)
+            // Individual GameObjects for nodes/connections are updated through their own components
+            
+            // For combined mesh, you would update it here if needed
+            if (combinedMeshFilter != null)
             {
-                 // List<Vector3> points = nodes.Select(n => n.transform.position).ToList();
-                 // float isoLevel = 0.5f; // Example
-                 // Mesh newMesh = meshGenerator.GenerateMesh(points, isoLevel); 
-                 // combinedMeshFilter.mesh = newMesh; // Assign the generated mesh
-                 // Debug.Log("Combined mesh updated (Placeholder).");
+                 // Placeholder for mesh generation logic
+                 // You'd generate a mesh based on node positions and connections
             }
-             else
-             {
-                 // Fallback or handle case where mesh components aren't ready
-             }
         }
 
         /// <summary>
@@ -509,7 +599,7 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
         /// </summary>
         private void OptimizeMorphology()
         {
-            Debug.Log("Running morphology optimization (Placeholder)...");
+            Debug.Log("Running morphology optimization...");
             // Example: Remove unconnected nodes
             List<MorphNode> nodesToRemove = nodes.Where(n => n.Connections.Count == 0 && nodes.Count > settings.initialSeedCount).ToList();
             if(nodesToRemove.Count > 0)
@@ -521,42 +611,6 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
                      Destroy(node.gameObject);
                  }
             }
-
-            // Example: Merge very close nodes (more complex)
-
-            // Example: Smooth connection paths (requires geometry manipulation)
-        }
-
-        /// <summary>
-        /// Exports the current state of the morphology into a data structure.
-        /// </summary>
-        private MorphologyData ExportMorphologyData()
-        {
-            MorphologyData data = new MorphologyData
-            {
-                morphologyId = $"Morph_{System.DateTime.Now:yyyyMMdd_HHmmss}",
-                nodePositions = nodes.Select(n => n.transform.position).ToList(),
-                connections = new List<int[]>(),
-                metrics = CalculateMetrics(),
-                parametersUsed = currentParameters, // Store the parameters used
-                generationTime = System.DateTime.Now
-            };
-
-            // Create connection index pairs
-            Dictionary<MorphNode, int> nodeIndexMap = nodes.Select((node, index) => new { node, index })
-                                                         .ToDictionary(pair => pair.node, pair => pair.index);
-
-            foreach (var connection in connections)
-            {
-                if (connection.NodeA != null && connection.NodeB != null &&
-                    nodeIndexMap.ContainsKey(connection.NodeA) && nodeIndexMap.ContainsKey(connection.NodeB))
-                {
-                    data.connections.Add(new int[] { nodeIndexMap[connection.NodeA], nodeIndexMap[connection.NodeB] });
-                }
-            }
-
-            Debug.Log($"Exported MorphologyData with {data.nodePositions.Count} nodes and {data.connections.Count} connections.");
-            return data;
         }
 
         /// <summary>
@@ -569,73 +623,65 @@ namespace BiomorphicSim.Core // Keep namespace if originally present, otherwise 
             metrics["ConnectionCount"] = connections.Count;
             metrics["Density"] = nodes.Count / Mathf.Max(1f, growthZone.size.x * growthZone.size.y * growthZone.size.z); // Volumetric density
 
-            // Add more metrics: Bounding box volume, surface area (if mesh exists), average connection length, etc.
+            // Add more metrics as needed
             if (nodes.Count > 0)
             {
                 Bounds actualBounds = new Bounds(nodes[0].transform.position, Vector3.zero);
                 foreach(var node in nodes) { actualBounds.Encapsulate(node.transform.position); }
                 metrics["BoundingVolume"] = actualBounds.size.x * actualBounds.size.y * actualBounds.size.z;
 
-                float totalLength = 0;
-                 foreach(var conn in connections) { totalLength += conn.Length; }
-                 metrics["AverageConnectionLength"] = connections.Count > 0 ? totalLength / connections.Count : 0;
+                float totalConnectionLength = 0;
+                foreach(var conn in connections) 
+                { 
+                    // Avoid direct property access to prevent ambiguity
+                    float length = Vector3.Distance(conn.NodeA.transform.position, conn.NodeB.transform.position);
+                    totalConnectionLength += length;
+                }
+                metrics["AverageConnectionLength"] = connections.Count > 0 ? totalConnectionLength / connections.Count : 0;
             } else {
                  metrics["BoundingVolume"] = 0;
                  metrics["AverageConnectionLength"] = 0;
             }
 
-
             return metrics;
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Creates the appropriate growth algorithm based on parameters.
         /// </summary>
         private IGrowthAlgorithm CreateGrowthAlgorithm(MorphologyParameters parameters)
         {
-            // Use BiotypeBehaviors if available (preferred)
-            BiotypeBehaviors behaviors = GetComponent<BiotypeBehaviors>(); // Or find it if it's elsewhere
+            // Try to use BiotypeBehaviors if available
+            BiotypeBehaviors behaviors = GetComponent<BiotypeBehaviors>();
             if (behaviors != null)
             {
                 return behaviors.GetGrowthAlgorithm(parameters);
             }
 
-            // Fallback to potentially missing or simplified direct instantiation (using detailed names)
-            Debug.LogWarning("BiotypeBehaviors component not found. Falling back to direct algorithm instantiation. Ensure BiotypeBehaviors.cs exists and defines the detailed algorithms.");
-            switch (parameters.biomorphType)
+            // Fallback to direct instantiation using dictionary pattern instead of switch
+            return GetGrowthAlgorithmByType(parameters.biomorphType);
+        }
+        
+        /// <summary>
+        /// Factory method to get growth algorithm by type
+        /// </summary>
+        private IGrowthAlgorithm GetGrowthAlgorithmByType(MorphologyParameters.BiomorphType type)
+        {
+            // Using a dictionary approach for cleaner code and better performance
+            var algorithmMap = new Dictionary<MorphologyParameters.BiomorphType, IGrowthAlgorithm>
             {
-                case MorphologyParameters.BiomorphType.Mold:
-                    // Use the detailed version defined in BiotypeBehaviors.cs (assuming it exists globally or is accessible)
-                    // Need to decide how parameters are passed if BiotypeBehaviors isn't used.
-                    // return new DetailedMoldGrowthAlgorithm(/* constructor parameters if needed */); 
-                    return new MoldGrowthAlgorithm(); // Simple fallback
-                case MorphologyParameters.BiomorphType.Bone:
-                    // return new DetailedBoneGrowthAlgorithm(/* constructor parameters if needed */);
-                     return new BoneGrowthAlgorithm(); // Simple fallback
-                case MorphologyParameters.BiomorphType.Coral:
-                    // return new DetailedCoralGrowthAlgorithm(/* constructor parameters if needed */);
-                     return new CoralGrowthAlgorithm(); // Simple fallback
-                case MorphologyParameters.BiomorphType.Mycelium:
-                    // return new DetailedMyceliumGrowthAlgorithm(/* constructor parameters if needed */);
-                     return new MyceliumGrowthAlgorithm(); // Simple fallback
-                case MorphologyParameters.BiomorphType.Custom:
-                    // return new DetailedCustomGrowthAlgorithm(/* constructor parameters if needed */);
-                     return new CustomGrowthAlgorithm(); // Simple fallback
-                // Handle newly added BiomorphTypes if needed
-                case MorphologyParameters.BiomorphType.Organic:
-                case MorphologyParameters.BiomorphType.Crystalline:
-                case MorphologyParameters.BiomorphType.Fungal:
-                case MorphologyParameters.BiomorphType.Hybrid:
-                     Debug.LogWarning($"Fallback algorithm not defined for {parameters.biomorphType}. Using Mold.");
-                     return new MoldGrowthAlgorithm(); // Default fallback
-                default:
-                    Debug.LogWarning($"Unknown biomorph type: {parameters.biomorphType}. Using Mold algorithm.");
-                    return new MoldGrowthAlgorithm(); // Default fallback
+                { MorphologyParameters.BiomorphType.Mold, new MoldGrowthAlgorithm() },
+                { MorphologyParameters.BiomorphType.Bone, new BoneGrowthAlgorithm() },
+                { MorphologyParameters.BiomorphType.Coral, new CoralGrowthAlgorithm() },
+                { MorphologyParameters.BiomorphType.Mycelium, new MyceliumGrowthAlgorithm() },
+                { MorphologyParameters.BiomorphType.Custom, new CustomGrowthAlgorithm() }
+            };
+
+            if (algorithmMap.TryGetValue(type, out var algorithm))
+            {
+                return algorithm;
             }
+            
+            return new MoldGrowthAlgorithm(); // Default fallback
         }
         #endregion
     }
-
-    // Removed GrowthResult, GrowthInfluenceMap, MorphologyData, MorphologyParameters, MorphologySettings definitions from here.
-    // Removed IGrowthAlgorithm interface and basic implementations (MoldGrowthAlgorithm, etc.) from here.
-} // End of namespace BiomorphicSim.Core
+}

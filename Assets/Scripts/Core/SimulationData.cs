@@ -27,14 +27,6 @@ namespace BiomorphicSim.Core
     /// <summary>
     /// Result of a growth calculation. Defines potential new node info.
     /// </summary>
-    public struct GrowthResult
-    {
-        public bool isValid;
-        public Vector3 position;
-        public MorphNode parentNode; // Node from which this growth originates
-        public Vector3 direction;    // Direction of growth
-        public float quality;        // Quality/Probability score of this growth potential (0-1)
-    }
 
     /// <summary>
     /// Holds the overall simulation settings.
@@ -163,7 +155,7 @@ namespace BiomorphicSim.Core
         public float simulationDuration; // Duration of the scenario simulation
         public bool recordHistory; // Whether to store time-series data
     }
-
+    
     /// <summary>
     /// Results from a scenario analysis run.
     /// </summary>
@@ -172,7 +164,7 @@ namespace BiomorphicSim.Core
     {
         public string scenarioId; // Matches ScenarioData name or a unique run ID
         public string morphologyId; // ID of the morphology analyzed
-        public Dictionary<string, float> finalMetrics; // Metrics after scenario completion
+        public Dictionary<string, float> metrics; // Metrics after scenario completion
         public Dictionary<string, List<float>> timeSeriesData; // Recorded history if enabled
         public bool adaptationSuccessful; // Did the morphology adapt as expected?
         public List<string> observations; // Qualitative notes or significant events

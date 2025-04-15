@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BiomorphicSim.Core; // Add this line to use the correct SiteSettings class
 
 /// <summary>
 /// Handles the generation of the Wellington Lambton Quay site as a 3D environment.
@@ -1095,11 +1096,10 @@ public class SiteGenerator : MonoBehaviour
         List<int> triangles = new List<int>();
         List<Vector2> uvs = new List<Vector2>();
         
-        // Trunk - cylinder
-        int segments = 8;
         float trunkHeight = 2f * scale;
         float trunkRadius = 0.2f * scale;
         float crownRadius = 1.5f * scale;
+        int segments = 8;
         
         // Trunk bottom circle
         vertices.Add(new Vector3(0, 0, 0)); // Center

@@ -1046,8 +1046,8 @@ public class VisualizationStyle
     public Color lowStressColor = Color.green;
     public Color highStressColor = Color.red;
     public Color ambientLightColor = Color.white;
-    
-    [Header("Lighting")]
+      [Header("Lighting")]
+    public Color lightColor = Color.white;
     public float lightIntensity = 1.0f;
     public bool useBloom = false;
     public float bloomIntensity = 1.0f;
@@ -1056,6 +1056,10 @@ public class VisualizationStyle
     public bool useTransparency = false;
     public float transparencyLevel = 1.0f;
     public bool useGlow = false;
+    public float stressColorIntensity = 1.0f;
+    public float adaptationColorIntensity = 1.0f;
+    public float nodeThicknessMultiplier = 1.0f;
+    public float connectionThicknessMultiplier = 1.0f;
     public float glowIntensity = 1.0f;
     public bool scaleByStress = true;
     public bool useOutline = false;

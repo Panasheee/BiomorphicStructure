@@ -99,13 +99,7 @@ public class BiotypeBehaviors : MonoBehaviour
                 );
                 
             default:
-                return new DetailedMoldGrowthAlgorithm(
-                    moldExplorationRate, 
-                    moldBranchingRate,
-                    moldResourceSensitivity,
-                    moldConnectionStrength,
-                    parameters
-                );
+                throw new System.ArgumentException($"Unexpected BiomorphType: {parameters.biomorphType}");
         }
     }
     

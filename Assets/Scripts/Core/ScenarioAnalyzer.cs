@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using BiomorphicSim.Core; // Add this line to use the correct types
 
 /// <summary>
 /// Handles the analysis of how morphological structures respond to different scenarios.
@@ -14,14 +15,15 @@ public class ScenarioAnalyzer : MonoBehaviour
     [SerializeField] private ScenarioSettings settings;
     
     [Header("Visualization")]
-    [SerializeField] private Material standardMaterial;    [SerializeField] private Material stressMaterial;
+    [SerializeField] private Material standardMaterial;
+    [SerializeField] private Material stressMaterial;
     [SerializeField] private Material adaptationMaterial;
     [SerializeField] private GameObject forceVisualizerPrefab;
     #endregion
     
     #region State
     // The morphology being analyzed
-    private BiomorphicSim.Core.MorphologyData currentMorphology;
+    private MorphologyData currentMorphology;
     private List<MorphNode> morphNodes = new List<MorphNode>();
     private List<MorphConnection> morphConnections = new List<MorphConnection>();
     
@@ -45,7 +47,8 @@ public class ScenarioAnalyzer : MonoBehaviour
     
     // Flag to track if a node has moved far enough to count as adaptation
     private bool significantAdaptationDetected = false;
-      // Public progress tracker for UI
+    
+    // Public progress tracker for UI
     public float AnalysisProgress => analysisProgress;
     
     // Used to track the current scenario
@@ -92,12 +95,13 @@ public class ScenarioAnalyzer : MonoBehaviour
     {
         settings = newSettings;
     }
-      /// <summary>
+    
+    /// <summary>
     /// Runs a scenario analysis on the specified morphology
     /// </summary>
     /// <param name="morphologyData">The morphology to analyze</param>
     /// <param name="scenario">The scenario to run</param>
-    public void RunScenario(BiomorphicSim.Core.MorphologyData morphologyData, ScenarioData scenario)
+    public void RunScenario(MorphologyData morphologyData, ScenarioData scenario)
     {
         // Stop any existing analysis
         if (isAnalyzing)

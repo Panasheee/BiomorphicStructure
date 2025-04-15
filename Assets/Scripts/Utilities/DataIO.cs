@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System.IO;
-using System;
+using UnityEngine;
+using BiomorphicSim.Core; // For Core types
+using BiomorphicSim.Utilities; // For utility classes
 
 /// <summary>
 /// Handles saving and loading of simulation data to/from files.
@@ -701,7 +703,7 @@ public class DataIO : MonoBehaviour
     /// <returns>The modified JSON string</returns>
     private string InsertPropertyIntoJson(string json, string propertyName, string propertyJson)
     {
-        // Find either the end of the object "{" or a property separator ","
+        // Find either the end of the object "{" or a property separator "," 
         int insertPos = json.LastIndexOf('}');
         
         if (insertPos > 0)
@@ -801,13 +803,13 @@ public class DataIO : MonoBehaviour
     /// <param name="morphologyData">The morphology data</param>
     /// <returns>The generated mesh</returns>
     private Mesh GenerateMeshFromMorphology(MorphologyData morphologyData)
-    {
-        return MeshGenerator.GenerateMorphologyMesh(
-            morphologyData.nodePositions,
-            morphologyData.connections,
-            morphologyData.parameters.biomorphType
-        );
-    }
+{
+    return MeshGenerator.GenerateMorphologyMesh(
+        morphologyData.nodePositions,
+        morphologyData.connections,
+        (BiomorphicSim.Utilities.MorphologyParameters.BiomorphType)((int)morphologyData.parametersUsed.biomorphType)
+    );
+}
     
     /// <summary>
     /// Exports a mesh to OBJ format

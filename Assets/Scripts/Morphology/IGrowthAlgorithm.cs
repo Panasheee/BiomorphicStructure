@@ -24,6 +24,7 @@ public interface IGrowthAlgorithm
         MorphologyParameters parameters,
         GrowthInfluenceMap influenceMap,
         LayerMask obstaclesMask
+        
     );
 }
 
@@ -32,28 +33,8 @@ public interface IGrowthAlgorithm
 /// </summary>
 public struct GrowthResult
 {
-    /// <summary>
-    /// Whether the growth calculation produced a valid result
-    /// </summary>
-    public bool isValid;
-    
-    /// <summary>
-    /// Position for a new node
-    /// </summary>
-    public Vector3 position;
-    
-    /// <summary>
-    /// Parent node for connection (if any)
-    /// </summary>
-    public MorphNode parentNode;
-    
-    /// <summary>
-    /// Direction of growth
-    /// </summary>
-    public Vector3 direction;
-    
-    /// <summary>
-    /// Probability or weight of this growth
-    /// </summary>
-    public float probability;
+    public bool isValid;       // Whether the growth result is valid
+    public Vector3 position;    // Position of the potential new node
+    public MorphNode parentNode; // The node from which this growth originates
+    public float quality;      // A metric indicating the quality/priority of this growth point (e.g., 0-1)
 }
