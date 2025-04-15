@@ -9,6 +9,10 @@
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 
+# Third-party plugins
+Assets/Plugins/geometry3Sharp-master/
+Assets/Plugins/geometry3Sharp-master.meta
+
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
