@@ -1,0 +1,77 @@
+# Large files that exceed GitHub's size limit
+Assets/Resources/Textures/J1_CBD_North.skp
+Assets/Resources/Textures/J1_CBD_North.slpk
+
+# Unity generated files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Unity Assets to ignore (large files)
+*.unitypackage
+*.rar
+*.zip
+*.7z
+*.psd
+*.tga
+*.exr
+*.hdr
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.fbx
+*.bin
+*.dll
+*.so
+*/ArcGISMapsSDK/HPF/*/HPFrames/
+*/ArcGISMapsSDK/HPF/Data/
+
+# Asset meta data should only be ignoredwhen the corresponding asset is also ignored
+!/[Aa]ssets/**/*.meta
+
+# Visual Studio / Visual Studio Code files
+.vs/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity3D generated meta files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity3D generated file on crash reports
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics generated file
+crashlytics-build.properties
+
+# Packed Addressables
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+# Temporary auto-generated Android Assets
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*

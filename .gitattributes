@@ -1,0 +1,4 @@
+*.slpk filter=lfs diff=lfs merge=lfs -text
+*.skp filter=lfs diff=lfs merge=lfs -text
+Assets/Resources/Textures/J1_CBD_North.skp filter=lfs diff=lfs merge=lfs -text
+Assets/Resources/Textures/J1_CBD_North.slpk filter=lfs diff=lfs merge=lfs -text
