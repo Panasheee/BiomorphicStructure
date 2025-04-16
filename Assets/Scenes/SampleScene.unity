@@ -305,143 +305,6 @@ MonoBehaviour:
   lightAttractionFactor: 0.6
   gravityInfluenceFactor: 0.5
   environmentInfluenceVisualizerPrefab: {fileID: 0}
---- !u!1 &908939286
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 908939287}
-  - component: {fileID: 908939292}
-  - component: {fileID: 908939291}
-  - component: {fileID: 908939290}
-  - component: {fileID: 908939289}
-  - component: {fileID: 908939288}
-  m_Layer: 0
-  m_Name: ArcGISMap
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &908939287
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908939286}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.7833138, y: -0.44763184, z: 2.2702398}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &908939288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908939286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dcd28fd6548e2fa4ebd997977f427bd0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  latitude: -41.2865
-  longitude: 174.7762
-  altitude: 1000
-  imageryServiceUrl: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
-  elevationServiceUrl: https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer
-  autoInitialize: 1
-  mainCamera: {fileID: 0}
-  originalTerrain: {fileID: 0}
-  showDebugMessages: 1
---- !u!114 &908939289
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908939286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3886c9e3234ca140afb637a8ba046e0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableTerrainElevation: 1
-  enable3DBuildings: 1
-  renderQuality: 1
-  useHDR: 1
-  terrainMaterial: {fileID: 0}
-  buildingMaterial: {fileID: 0}
-  enableShadows: 1
-  enableFog: 0
-  fogColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.5}
-  fogDensity: 0.02
-  showDebugMessages: 1
-  showMockTerrain: 1
---- !u!114 &908939290
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908939286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c99a8103ee0f94a418d4bc919bf71293, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  basemapURL: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
-  apiKey: 
-  latitude: -41.2865
-  longitude: 174.7762
-  altitude: 1000
-  zoomLevel: 15
-  showSatelliteImagery: 1
-  showLabels: 1
-  defaultTerrainMaterial: {fileID: 0}
-  showDebugMessages: 1
---- !u!114 &908939291
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908939286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9cc8cf6278ccae4409e51388414d6a33, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &908939292
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908939286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cfc1a3a2c0b403f46a93224c7a84ffe8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetCamera: {fileID: 0}
-  movementSpeed: 10
-  rotationSpeed: 100
-  zoomSpeed: 5
-  minAltitude: 100
-  maxAltitude: 5000
-  initialPosition: {x: 0, y: 500, z: -500}
-  initialRotation: {x: 45, y: 0, z: 0}
-  autoPositionCamera: 1
-  showDebugMessages: 1
 --- !u!1 &986473222
 GameObject:
   m_ObjectHideFlags: 0
@@ -860,6 +723,215 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1226607092
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1226607095}
+  - component: {fileID: 1226607094}
+  - component: {fileID: 1226607093}
+  - component: {fileID: 1226607099}
+  - component: {fileID: 1226607098}
+  - component: {fileID: 1226607097}
+  - component: {fileID: 1226607096}
+  m_Layer: 0
+  m_Name: ArcGISMap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1226607093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226607092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c703502c1493f5b4eb3e95b2efe0271e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  apiKey: 
+  basemap: 
+  basemapType: 0
+  basemapAuthentication:
+    ConfigurationIndex: -1
+  basemapAuthenticationType: 1
+  mapElevation:
+    ElevationSources:
+    - Name: Terrain 3D
+      Type: 0
+      Source: https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer
+      IsEnabled: 0
+      Authentication:
+        ConfigurationIndex: -1
+      AuthenticationType: 1
+    ExaggerationFactor: 1
+    MeshModifications:
+      IsEnabled: 1
+      MeshModifications: []
+  enableExtent: 0
+  extent:
+    GeographicCenter:
+      x: 0
+      y: 0
+      z: 0
+      SRWkid: 4326
+      spatialReference:
+        wkid: 4326
+        verticalWKID: 0
+      version: 1
+    ExtentShape: 0
+    ShapeDimensions:
+      x: 0
+      y: 0
+    UseOriginAsCenter: 0
+  layers: []
+  originPosition:
+    x: 0
+    y: 0
+    z: 0
+    SRWkid: 4326
+    spatialReference:
+      wkid: 4326
+      verticalWKID: 0
+    version: 1
+  mapType: 1
+  useCustomMapSpatialReference: 0
+  customMapSpatialReference:
+    wkid: 3857
+    verticalWKID: 0
+  editorModeEnabled: 1
+  dataFetchWithSceneView: 1
+  rebaseWithSceneView: 0
+  meshCollidersEnabled: 0
+  configurations: []
+  oauthUserConfigurations: []
+  RootChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  version: 3
+--- !u!114 &1226607094
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226607092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 265b6a392115d8a4aa7154d8c9356e26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_LocalPosition:
+    x: 0
+    y: 0
+    z: 0
+  m_LocalRotation:
+    value:
+      x: 0
+      y: 0
+      z: 0
+      w: 1
+--- !u!4 &1226607095
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226607092}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1226607096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226607092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcd28fd6548e2fa4ebd997977f427bd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  latitude: -41.2865
+  longitude: 174.7762
+  altitude: 1000
+  imageryServiceUrl: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
+  elevationServiceUrl: https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer
+  autoInitialize: 1
+  mainCamera: {fileID: 0}
+  originalTerrain: {fileID: 0}
+  showDebugMessages: 1
+--- !u!114 &1226607097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226607092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1adb07e07fe0aac4a848279015c917f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  disableTerrainOcclusion: 0
+--- !u!114 &1226607098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226607092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc1a3a2c0b403f46a93224c7a84ffe8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCamera: {fileID: 0}
+  movementSpeed: 10
+  rotationSpeed: 100
+  zoomSpeed: 5
+  minAltitude: 100
+  maxAltitude: 5000
+  initialPosition: {x: 0, y: 500, z: -500}
+  initialRotation: {x: 45, y: 0, z: 0}
+  autoPositionCamera: 1
+  showDebugMessages: 1
+--- !u!114 &1226607099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226607092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c99a8103ee0f94a418d4bc919bf71293, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  basemapURL: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
+  apiKey: b82c50126cfc44b3857f78a6b33ccb33
+  latitude: -41.2865
+  longitude: 174.7762
+  altitude: 1000
+  zoomLevel: 15
+  showSatelliteImagery: 1
+  showLabels: 1
+  defaultTerrainMaterial: {fileID: 0}
+  showDebugMessages: 1
 --- !u!1 &1233851845
 GameObject:
   m_ObjectHideFlags: 0
@@ -1159,4 +1231,4 @@ SceneRoots:
   - {fileID: 1150830402}
   - {fileID: 1212890387}
   - {fileID: 993868314}
-  - {fileID: 908939287}
+  - {fileID: 1226607095}
