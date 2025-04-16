@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Video;
 
 namespace BiomorphicSim.UI
 {
@@ -68,7 +69,8 @@ namespace BiomorphicSim.UI
             
             if (uiCanvasObject == null)
             {
-                Debug.LogError("UICanvas not found in hierarchy. UI screens will not function correctly.");
+                Debug.LogWarning("UICanvas not found in hierarchy. Creating new UICanvas...");
+                CreateUICanvas();
                 return;
             }
         }
@@ -82,14 +84,519 @@ namespace BiomorphicSim.UI
         morphologyScreen = uiCanvasObject.transform.Find("MorphologyScreen")?.gameObject;
         scenarioScreen = uiCanvasObject.transform.Find("ScenarioScreen")?.gameObject;
         
+        // Create missing screens
+        if (startScreen == null) {
+            Debug.LogWarning("StartScreen not found. Creating new StartScreen...");
+            CreateStartScreen();
+        }
+        
+        if (siteViewerScreen == null) {
+            Debug.LogWarning("SiteViewerScreen not found. Creating new SiteViewerScreen...");
+            CreateSiteViewerScreen();
+        }
+        
+        if (siteAnalysisScreen == null) {
+            Debug.LogWarning("SiteAnalysisScreen not found. Creating new SiteAnalysisScreen...");
+            CreateSiteAnalysisScreen();
+        }
+        
+        if (morphologyScreen == null) {
+            Debug.LogWarning("MorphologyScreen not found. Creating new MorphologyScreen...");
+            CreateMorphologyScreen();
+        }
+        
+        if (scenarioScreen == null) {
+            Debug.LogWarning("ScenarioScreen not found. Creating new ScenarioScreen...");
+            CreateScenarioScreen();
+        }
+        
         // Log which screens were found
         Debug.Log($"Found UI screens - StartScreen: {startScreen != null}, " +
                  $"SiteViewerScreen: {siteViewerScreen != null}, " +
                  $"SiteAnalysisScreen: {siteAnalysisScreen != null}, " +
                  $"MorphologyScreen: {morphologyScreen != null}, " +
                  $"ScenarioScreen: {scenarioScreen != null}");
+        
+        // Make sure the Canvas has a CanvasScaler and Graphics Raycaster
+        EnsureCanvasComponents();
     }
-          [Header("UI Components")]
+    
+    private void CreateUICanvas()
+    {
+        // Create the UI Canvas
+        uiCanvasObject = new GameObject("UICanvas");
+        
+        // Add necessary Canvas components
+        Canvas canvas = uiCanvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100; // Make sure it's visible on top
+        
+        // Add canvas scaler for responsive UI
+        CanvasScaler scaler = uiCanvasObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f; // Balance width and height
+        
+        // Add graphic raycaster for UI interaction
+        GraphicRaycaster raycaster = uiCanvasObject.AddComponent<GraphicRaycaster>();
+        
+        // Make sure we have an EventSystem
+        if (FindObjectOfType<EventSystem>() == null)
+        {
+            GameObject eventSystem = new GameObject("EventSystem");
+            eventSystem.AddComponent<EventSystem>();
+            eventSystem.AddComponent<StandaloneInputModule>();
+        }
+        
+        // Create all necessary UI screens
+        CreateStartScreen();
+        CreateSiteViewerScreen();
+        CreateSiteAnalysisScreen();
+        CreateMorphologyScreen();
+        CreateScenarioScreen();
+        
+        Debug.Log("UICanvas created successfully with all UI screens");
+    }
+    
+    private void EnsureCanvasComponents()
+    {
+        if (uiCanvasObject == null) return;
+        
+        // Make sure the Canvas has a Canvas component
+        Canvas canvas = uiCanvasObject.GetComponent<Canvas>();
+        if (canvas == null)
+        {
+            canvas = uiCanvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+        }
+        
+        // Make sure the Canvas has a CanvasScaler component
+        CanvasScaler scaler = uiCanvasObject.GetComponent<CanvasScaler>();
+        if (scaler == null)
+        {
+            scaler = uiCanvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+        }
+        
+        // Make sure the Canvas has a GraphicRaycaster component
+        GraphicRaycaster raycaster = uiCanvasObject.GetComponent<GraphicRaycaster>();
+        if (raycaster == null)
+        {
+            raycaster = uiCanvasObject.AddComponent<GraphicRaycaster>();
+        }
+    }
+    
+    private void CreateStartScreen()
+    {
+        startScreen = new GameObject("StartScreen");
+        startScreen.transform.SetParent(uiCanvasObject.transform, false);
+        
+        // Add RectTransform component
+        RectTransform rect = startScreen.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        
+        // Create a solid black background first
+        GameObject blackBackground = new GameObject("BlackBackground");
+        blackBackground.transform.SetParent(startScreen.transform, false);
+        
+        RectTransform blackBgRect = blackBackground.AddComponent<RectTransform>();
+        blackBgRect.anchorMin = Vector2.zero;
+        blackBgRect.anchorMax = Vector2.one;
+        blackBgRect.offsetMin = Vector2.zero;
+        blackBgRect.offsetMax = Vector2.zero;
+        
+        Image blackBgImage = blackBackground.AddComponent<Image>();
+        blackBgImage.color = Color.black; // Solid black background
+        
+        // Create a background video component
+        GameObject videoBackground = new GameObject("VideoBackground");
+        videoBackground.transform.SetParent(startScreen.transform, false);
+        
+        RectTransform videoBgRect = videoBackground.AddComponent<RectTransform>();
+        videoBgRect.anchorMin = Vector2.zero;
+        videoBgRect.anchorMax = Vector2.one;
+        videoBgRect.offsetMin = Vector2.zero;
+        videoBgRect.offsetMax = Vector2.zero;
+        
+        RawImage rawImage = videoBackground.AddComponent<RawImage>();
+        rawImage.color = Color.white;
+        backgroundVideoImage = rawImage;
+        
+        // Add VideoPlayer component
+        VideoPlayer videoPlayer = videoBackground.AddComponent<VideoPlayer>();
+        videoPlayer.renderMode = VideoRenderMode.RenderTexture;
+        videoPlayer.targetTexture = new RenderTexture(1920, 1080, 24);
+        videoPlayer.isLooping = true;
+        videoPlayer.playOnAwake = true;
+        rawImage.texture = videoPlayer.targetTexture;
+        backgroundVideoPlayer = videoPlayer;
+        
+        // Try to load the video
+        LoadBackgroundVideo();
+        
+        // Create a semi-transparent overlay panel (reduce opacity for better video visibility)
+        GameObject overlay = new GameObject("Overlay");
+        overlay.transform.SetParent(startScreen.transform, false);
+        
+        RectTransform overlayRect = overlay.AddComponent<RectTransform>();
+        overlayRect.anchorMin = Vector2.zero;
+        overlayRect.anchorMax = Vector2.one;
+        overlayRect.offsetMin = Vector2.zero;
+        overlayRect.offsetMax = Vector2.zero;
+        
+        Image overlayImage = overlay.AddComponent<Image>();
+        overlayImage.color = new Color(0, 0, 0, 0.5f); // Black with 50% opacity for better video visibility
+        
+        // Create title text
+        GameObject titleObj = new GameObject("TitleText");
+        titleObj.transform.SetParent(startScreen.transform, false);
+        
+        RectTransform titleRect = titleObj.AddComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.5f, 0.8f);
+        titleRect.anchorMax = new Vector2(0.5f, 0.9f);
+        titleRect.sizeDelta = new Vector2(800, 100);
+        titleRect.anchoredPosition = Vector2.zero;
+        
+        TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
+        titleText.text = "BIOMORPHIC SIMULATOR";
+        titleText.fontSize = 48;
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.alignment = TextAlignmentOptions.Center;
+        titleText.color = Color.white;
+        
+        // Create Load Site button
+        GameObject loadButtonObj = new GameObject("LoadSiteButton");
+        loadButtonObj.transform.SetParent(startScreen.transform, false);
+        
+        RectTransform loadRect = loadButtonObj.AddComponent<RectTransform>();
+        loadRect.anchorMin = new Vector2(0.5f, 0.5f);
+        loadRect.anchorMax = new Vector2(0.5f, 0.5f);
+        loadRect.sizeDelta = new Vector2(300, 60);
+        loadRect.anchoredPosition = Vector2.zero;
+        
+        Image loadImg = loadButtonObj.AddComponent<Image>();
+        loadImg.color = new Color(0.1f, 0.1f, 0.1f, 0.8f); // Dark gray, almost black
+        
+        Button loadBtn = loadButtonObj.AddComponent<Button>();
+        loadBtn.transition = Selectable.Transition.ColorTint;
+        
+        // Set up button colors in monochrome
+        ColorBlock colors = loadBtn.colors;
+        colors.normalColor = new Color(0.1f, 0.1f, 0.1f, 0.8f);
+        colors.highlightedColor = new Color(0.3f, 0.3f, 0.3f, 0.9f);
+        colors.pressedColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+        colors.selectedColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+        loadBtn.colors = colors;
+        
+        // Set this as our loadSiteButton field
+        loadSiteButton = loadBtn;
+        
+        // Add text to button
+        GameObject btnTextObj = new GameObject("Text");
+        btnTextObj.transform.SetParent(loadButtonObj.transform, false);
+        
+        RectTransform btnTextRect = btnTextObj.AddComponent<RectTransform>();
+        btnTextRect.anchorMin = Vector2.zero;
+        btnTextRect.anchorMax = Vector2.one;
+        btnTextRect.offsetMin = Vector2.zero;
+        btnTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI btnText = btnTextObj.AddComponent<TextMeshProUGUI>();
+        btnText.text = "LOAD SITE";
+        btnText.fontSize = 24;
+        btnText.fontStyle = FontStyles.Bold;
+        btnText.alignment = TextAlignmentOptions.Center;
+        btnText.color = Color.white;
+        
+        Debug.Log("StartScreen created successfully");
+    }
+    
+    private void CreateSiteViewerScreen()
+    {
+        // Create basic screen with back button and run analysis button
+        siteViewerScreen = new GameObject("SiteViewerScreen");
+        siteViewerScreen.transform.SetParent(uiCanvasObject.transform, false);
+        
+        RectTransform rect = siteViewerScreen.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        
+        // Add a setup component
+        siteViewerScreen.AddComponent<SiteViewerScreenSetup>();
+        
+        Debug.Log("SiteViewerScreen created successfully");
+    }
+    
+    private void CreateSiteAnalysisScreen()
+    {
+        // Create a basic analysis screen
+        siteAnalysisScreen = new GameObject("SiteAnalysisScreen");
+        siteAnalysisScreen.transform.SetParent(uiCanvasObject.transform, false);
+        
+        RectTransform rect = siteAnalysisScreen.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        
+        // Add a background panel
+        GameObject panel = new GameObject("Panel");
+        panel.transform.SetParent(siteAnalysisScreen.transform, false);
+        
+        RectTransform panelRect = panel.AddComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+        
+        Image panelImg = panel.AddComponent<Image>();
+        panelImg.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
+        
+        // Create Analysis Report Text area
+        GameObject reportObj = new GameObject("AnalysisReportText");
+        reportObj.transform.SetParent(siteAnalysisScreen.transform, false);
+        
+        RectTransform reportRect = reportObj.AddComponent<RectTransform>();
+        reportRect.anchorMin = new Vector2(0.1f, 0.2f);
+        reportRect.anchorMax = new Vector2(0.9f, 0.8f);
+        reportRect.offsetMin = Vector2.zero;
+        reportRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI reportText = reportObj.AddComponent<TextMeshProUGUI>();
+        reportText.text = "SITE ANALYSIS REPORT\n\nClick 'Run Analysis' to generate report.";
+        reportText.fontSize = 24;
+        reportText.alignment = TextAlignmentOptions.TopLeft;
+        reportText.color = Color.white;
+        
+        // Set this as our analysisReportText field
+        analysisReportText = reportText;
+        
+        // Create back button
+        GameObject backBtnObj = new GameObject("BackButton");
+        backBtnObj.transform.SetParent(siteAnalysisScreen.transform, false);
+        
+        RectTransform backRect = backBtnObj.AddComponent<RectTransform>();
+        backRect.anchorMin = new Vector2(0.02f, 0.93f);
+        backRect.anchorMax = new Vector2(0.12f, 0.98f);
+        backRect.offsetMin = Vector2.zero;
+        backRect.offsetMax = Vector2.zero;
+        
+        Image backImg = backBtnObj.AddComponent<Image>();
+        backImg.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+        
+        Button backBtn = backBtnObj.AddComponent<Button>();
+        backBtn.transition = Selectable.Transition.ColorTint;
+        
+        // Add text to button
+        GameObject btnTextObj = new GameObject("Text");
+        btnTextObj.transform.SetParent(backBtnObj.transform, false);
+        
+        RectTransform btnTextRect = btnTextObj.AddComponent<RectTransform>();
+        btnTextRect.anchorMin = Vector2.zero;
+        btnTextRect.anchorMax = Vector2.one;
+        btnTextRect.offsetMin = Vector2.zero;
+        btnTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI btnText = btnTextObj.AddComponent<TextMeshProUGUI>();
+        btnText.text = "BACK";
+        btnText.fontSize = 16;
+        btnText.alignment = TextAlignmentOptions.Center;
+        btnText.color = Color.white;
+        
+        // Add Start Morphology button
+        GameObject morphBtnObj = new GameObject("StartMorphologyButton");
+        morphBtnObj.transform.SetParent(siteAnalysisScreen.transform, false);
+        
+        RectTransform morphRect = morphBtnObj.AddComponent<RectTransform>();
+        morphRect.anchorMin = new Vector2(0.88f, 0.93f);
+        morphRect.anchorMax = new Vector2(0.98f, 0.98f);
+        morphRect.offsetMin = Vector2.zero;
+        morphRect.offsetMax = Vector2.zero;
+        
+        Image morphImg = morphBtnObj.AddComponent<Image>();
+        morphImg.color = new Color(0.2f, 0.6f, 0.3f, 0.8f);
+        
+        Button morphBtn = morphBtnObj.AddComponent<Button>();
+        morphBtn.transition = Selectable.Transition.ColorTint;
+        
+        // Set this as our startMorphologyButton field
+        startMorphologyButton = morphBtn;
+        
+        // Add text to button
+        GameObject morphTextObj = new GameObject("Text");
+        morphTextObj.transform.SetParent(morphBtnObj.transform, false);
+        
+        RectTransform morphTextRect = morphTextObj.AddComponent<RectTransform>();
+        morphTextRect.anchorMin = Vector2.zero;
+        morphTextRect.anchorMax = Vector2.one;
+        morphTextRect.offsetMin = Vector2.zero;
+        morphTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI morphText = morphTextObj.AddComponent<TextMeshProUGUI>();
+        morphText.text = "START MORPHOLOGY";
+        morphText.fontSize = 14;
+        morphText.alignment = TextAlignmentOptions.Center;
+        morphText.color = Color.white;
+        
+        Debug.Log("SiteAnalysisScreen created successfully");
+    }
+    
+    private void CreateMorphologyScreen()
+    {
+        // Create a basic morphology screen
+        morphologyScreen = new GameObject("MorphologyScreen");
+        morphologyScreen.transform.SetParent(uiCanvasObject.transform, false);
+        
+        RectTransform rect = morphologyScreen.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        
+        // Create translucent panel
+        GameObject panel = new GameObject("ControlPanel");
+        panel.transform.SetParent(morphologyScreen.transform, false);
+        
+        RectTransform panelRect = panel.AddComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0, 0.85f);
+        panelRect.anchorMax = new Vector2(1, 1);
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+        
+        Image panelImg = panel.AddComponent<Image>();
+        panelImg.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
+        
+        // Create pause/resume button
+        GameObject pauseBtnObj = new GameObject("PauseResumeButton");
+        pauseBtnObj.transform.SetParent(panel.transform, false);
+        
+        RectTransform pauseRect = pauseBtnObj.AddComponent<RectTransform>();
+        pauseRect.anchorMin = new Vector2(0.02f, 0.2f);
+        pauseRect.anchorMax = new Vector2(0.12f, 0.8f);
+        pauseRect.offsetMin = Vector2.zero;
+        pauseRect.offsetMax = Vector2.zero;
+        
+        Image pauseImg = pauseBtnObj.AddComponent<Image>();
+        pauseImg.color = new Color(0.6f, 0.6f, 0.2f, 0.8f);
+        
+        Button pauseBtn = pauseBtnObj.AddComponent<Button>();
+        pauseBtn.transition = Selectable.Transition.ColorTint;
+        
+        // Set this as our pauseResumeButton field
+        pauseResumeButton = pauseBtn;
+        
+        // Add text to button
+        GameObject btnTextObj = new GameObject("Text");
+        btnTextObj.transform.SetParent(pauseBtnObj.transform, false);
+        
+        RectTransform btnTextRect = btnTextObj.AddComponent<RectTransform>();
+        btnTextRect.anchorMin = Vector2.zero;
+        btnTextRect.anchorMax = Vector2.one;
+        btnTextRect.offsetMin = Vector2.zero;
+        btnTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI btnText = btnTextObj.AddComponent<TextMeshProUGUI>();
+        btnText.text = "PAUSE";
+        btnText.fontSize = 18;
+        btnText.alignment = TextAlignmentOptions.Center;
+        btnText.color = Color.white;
+        
+        // Create node count text
+        GameObject countObj = new GameObject("NodeCountText");
+        countObj.transform.SetParent(panel.transform, false);
+        
+        RectTransform countRect = countObj.AddComponent<RectTransform>();
+        countRect.anchorMin = new Vector2(0.2f, 0.2f);
+        countRect.anchorMax = new Vector2(0.4f, 0.8f);
+        countRect.offsetMin = Vector2.zero;
+        countRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI countText = countObj.AddComponent<TextMeshProUGUI>();
+        countText.text = "NODES: 0";
+        countText.fontSize = 18;
+        countText.alignment = TextAlignmentOptions.Left;
+        countText.color = Color.white;
+        
+        // Set this as our nodeCountText field
+        nodeCountText = countText;
+        
+        // Create growth speed slider
+        GameObject sliderObj = new GameObject("GrowthSpeedSlider");
+        sliderObj.transform.SetParent(panel.transform, false);
+        
+        RectTransform sliderRect = sliderObj.AddComponent<RectTransform>();
+        sliderRect.anchorMin = new Vector2(0.5f, 0.2f);
+        sliderRect.anchorMax = new Vector2(0.8f, 0.8f);
+        sliderRect.offsetMin = Vector2.zero;
+        sliderRect.offsetMax = Vector2.zero;
+        
+        Slider speedSlider = sliderObj.AddComponent<Slider>();
+        speedSlider.minValue = 0;
+        speedSlider.maxValue = 1;
+        speedSlider.value = 0.5f;
+        
+        // Set this as our growthSpeedSlider field
+        growthSpeedSlider = speedSlider;
+        
+        // Create back button
+        GameObject backBtnObj = new GameObject("BackButton");
+        backBtnObj.transform.SetParent(panel.transform, false);
+        
+        RectTransform backRect = backBtnObj.AddComponent<RectTransform>();
+        backRect.anchorMin = new Vector2(0.85f, 0.2f);
+        backRect.anchorMax = new Vector2(0.95f, 0.8f);
+        backRect.offsetMin = Vector2.zero;
+        backRect.offsetMax = Vector2.zero;
+        
+        Image backImg = backBtnObj.AddComponent<Image>();
+        backImg.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+        
+        Button backBtn = backBtnObj.AddComponent<Button>();
+        backBtn.transition = Selectable.Transition.ColorTint;
+        
+        // Add text to button
+        GameObject backTextObj = new GameObject("Text");
+        backTextObj.transform.SetParent(backBtnObj.transform, false);
+        
+        RectTransform backTextRect = backTextObj.AddComponent<RectTransform>();
+        backTextRect.anchorMin = Vector2.zero;
+        backTextRect.anchorMax = Vector2.one;
+        backTextRect.offsetMin = Vector2.zero;
+        backTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI backText = backTextObj.AddComponent<TextMeshProUGUI>();
+        backText.text = "BACK";
+        backText.fontSize = 18;
+        backText.alignment = TextAlignmentOptions.Center;
+        backText.color = Color.white;
+        
+        Debug.Log("MorphologyScreen created successfully");
+    }
+    
+    private void CreateScenarioScreen()
+    {
+        // Create a basic scenario screen
+        scenarioScreen = new GameObject("ScenarioScreen");
+        scenarioScreen.transform.SetParent(uiCanvasObject.transform, false);
+        
+        RectTransform rect = scenarioScreen.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        
+        Debug.Log("ScenarioScreen created successfully");
+    }
+        
+        [Header("UI Components")]
         [SerializeField] private Button loadSiteButton;
         [SerializeField] private Button runAnalysisButton;
         [SerializeField] private Button startMorphologyButton;
@@ -113,6 +620,18 @@ namespace BiomorphicSim.UI
         [Header("Scenario Selection")]
         [SerializeField] private TMP_Dropdown scenarioDropdown;
         
+        [Header("Background Video")]
+        [SerializeField] private RawImage backgroundVideoImage;
+        [SerializeField] private VideoPlayer backgroundVideoPlayer;
+        [SerializeField] private string backgroundVideoPath = "Videos/Background";
+        
+        [Header("Camera Controls")]
+        [SerializeField] private float cameraSpeed = 10f;
+        [SerializeField] private float cameraRotationSpeed = 100f;
+        [SerializeField] private float cameraZoomSpeed = 500f;
+        private Camera mainCamera;
+        private bool cameraControlsEnabled = false;
+        
         // Tracking state
         private bool isMorphologyRunning = false;
         private bool isSiteZoneSelected = false;
@@ -130,6 +649,9 @@ namespace BiomorphicSim.UI
         // Make sure we have references to all UI components
         FindUICanvas();
         
+        // Find and setup the main camera
+        SetupMainCamera();
+        
         // Log that we've found (or not found) screens
         Debug.Log($"[STARTUP] UI screens status - StartScreen: {startScreen != null}, " +
                  $"SiteViewerScreen: {siteViewerScreen != null}, " +
@@ -144,6 +666,11 @@ namespace BiomorphicSim.UI
             Debug.Log("Successfully showed start screen");
         } else {
             Debug.LogError("[STARTUP] Cannot show StartScreen - it was not found in the UICanvas!");
+        }
+        
+        // Start the background video
+        if (backgroundVideoPlayer != null) {
+            LoadBackgroundVideo();
         }
         
         // Mark as initialized
@@ -352,35 +879,44 @@ namespace BiomorphicSim.UI
             // Wait for a frame to let the loading screen render
             yield return null;
             
-            // Handle the terrain visibility
-            if (siteTerrain != null)
-            {
-                // Disable the original magenta terrain
-                siteTerrain.SetActive(false);
-                Debug.Log("[DEBUG] LoadSiteCoroutine - Disabled original site terrain");
-            }
+            // Enable camera controls for site navigation
+            cameraControlsEnabled = true;
             
-            // Enable the ArcGIS map if available
+            // Always prioritize the ArcGIS map (ESRI SDK) for buildings and terrain
             if (arcgisMapObject != null)
             {
+                // Enable the ArcGIS map first
                 arcgisMapObject.SetActive(true);
-                Debug.Log("[DEBUG] LoadSiteCoroutine - Enabled ArcGIS map");
+                Debug.Log("[DEBUG] LoadSiteCoroutine - Enabled ArcGIS map from ESRI SDK");
+                
+                // Then disable the original terrain to avoid conflicts
+                if (siteTerrain != null)
+                {
+                    siteTerrain.SetActive(false);
+                    Debug.Log("[DEBUG] LoadSiteCoroutine - Disabled original site terrain");
+                }
             }
             else
             {
-                Debug.LogWarning("[DEBUG] LoadSiteCoroutine - ArcGIS map reference not set. Using original terrain.");
+                Debug.LogWarning("[DEBUG] LoadSiteCoroutine - ESRI SDK map not found! Please add ArcGIS map to the scene.");
+                Debug.LogWarning("[DEBUG] LoadSiteCoroutine - Check documentation for instructions on setting up ESRI ArcGIS SDK.");
                 
-                // If ArcGIS map is not available, re-enable the original terrain
+                // Fallback to the original terrain if ESRI SDK is not available
                 if (siteTerrain != null)
                 {
                     siteTerrain.SetActive(true);
+                    Debug.Log("[DEBUG] LoadSiteCoroutine - Using fallback terrain (not ESRI SDK)");
                 }
+                  // Show instructions to add ESRI SDK
+                ShowLoadingScreen(false);
+                StartCoroutine(ShowESRIInstructions());
+                yield break;
             }
             
             // Generate the default site (Lambton Quay)
             siteGenerator.GenerateDefaultSite();
             
-            Debug.Log("[DEBUG] LoadSiteCoroutine - Site generation complete");
+            Debug.Log("[DEBUG] LoadSiteCoroutine - Site generation complete with ESRI SDK buildings and terrain");
             
             // Wait a moment for the site to finish generating and for the ArcGIS map to load
             yield return new WaitForSeconds(1.0f);
@@ -401,7 +937,21 @@ namespace BiomorphicSim.UI
             ShowOnlyScreen(siteViewerScreen);
             
             // Set camera to focus on the site
-            visualizationManager.FocusOnSite();
+            if (visualizationManager != null)
+            {
+                visualizationManager.FocusOnSite();
+            }
+            else
+            {
+                Debug.LogError("[DEBUG] LoadSiteCoroutine - VisualizationManager is NULL!");
+                
+                // Fallback: position camera at a good viewing position
+                if (mainCamera != null)
+                {
+                    mainCamera.transform.position = new Vector3(0, 50, -50);
+                    mainCamera.transform.rotation = Quaternion.Euler(45, 0, 0);
+                }
+            }
             
             Debug.Log("[DEBUG] LoadSiteCoroutine - Site loading sequence complete");
         }
@@ -854,6 +1404,246 @@ namespace BiomorphicSim.UI
             
             // Show or hide the loading screen
             loadingScreen.SetActive(show);
+        }
+        
+        private void SetupMainCamera()
+        {
+            mainCamera = Camera.main;
+            
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("Main camera not found! Creating a new main camera.");
+                GameObject cameraObj = new GameObject("Main Camera");
+                mainCamera = cameraObj.AddComponent<Camera>();
+                mainCamera.tag = "MainCamera";
+                
+                // Position the camera
+                cameraObj.transform.position = new Vector3(0, 10, -10);
+                cameraObj.transform.rotation = Quaternion.Euler(45, 0, 0);
+            }
+            else
+            {
+                // Remove AudioListener from existing camera if present
+                AudioListener existingListener = mainCamera.GetComponent<AudioListener>();
+                if (existingListener != null)
+                {
+                    DestroyImmediate(existingListener);
+                    Debug.Log("Removed AudioListener from main camera");
+                }
+            }
+            
+            // Find and remove any other AudioListeners in the scene
+            AudioListener[] listeners = FindObjectsOfType<AudioListener>();
+            foreach (AudioListener listener in listeners)
+            {
+                DestroyImmediate(listener);
+                Debug.Log("Removed additional AudioListener from scene");
+            }
+            
+            // Pass the camera reference to the visualization manager
+            if (visualizationManager != null)
+            {
+                visualizationManager.SetMainCamera(mainCamera);
+                Debug.Log("Main camera reference passed to visualization manager");
+            }
+        }
+        
+        private void LoadBackgroundVideo()
+        {
+            if (backgroundVideoPlayer == null || backgroundVideoImage == null)
+                return;
+            
+            // Try to load the background video
+            VideoClip videoClip = Resources.Load<VideoClip>(backgroundVideoPath);
+            
+            if (videoClip != null)
+            {
+                backgroundVideoPlayer.clip = videoClip;
+                backgroundVideoPlayer.Play();
+                Debug.Log("Background video loaded and playing");
+            }
+            else
+            {
+                Debug.LogWarning($"Background video not found at path: Resources/{backgroundVideoPath}. Creating placeholder video texture.");
+                
+                // Create a render texture for the video player anyway
+                RenderTexture renderTexture = new RenderTexture(1920, 1080, 24);
+                backgroundVideoPlayer.targetTexture = renderTexture;
+                backgroundVideoImage.texture = renderTexture;
+                
+                // Set a fallback color - using a transparent black to show the black background
+                backgroundVideoImage.color = new Color(0f, 0f, 0f, 0.7f);
+                
+                // Try to create the Resources directory and subdirectory if it doesn't exist
+                string resourcesPath = Application.dataPath + "/Resources";
+                string videosPath = resourcesPath + "/Videos";
+                
+                if (!System.IO.Directory.Exists(resourcesPath))
+                {
+                    Debug.Log("Creating Resources directory at: " + resourcesPath);
+                    System.IO.Directory.CreateDirectory(resourcesPath);
+                }
+                
+                if (!System.IO.Directory.Exists(videosPath))
+                {
+                    Debug.Log("Creating Videos directory at: " + videosPath);
+                    System.IO.Directory.CreateDirectory(videosPath);
+                }
+                
+                Debug.Log("Please place a video file named 'Background.mp4' in the Resources/Videos folder");
+            }
+        }
+        
+        // Methods for camera controls
+        private void Update()
+        {
+            // Only handle camera controls when in site viewer or related screens
+            if (cameraControlsEnabled && mainCamera != null)
+            {
+                HandleCameraControls();
+            }
+        }
+        
+        private void HandleCameraControls()
+        {
+            float horizontal = Input.GetAxis("Horizontal");
+            float vertical = Input.GetAxis("Vertical");
+            float scrollWheel = Input.GetAxis("Mouse ScrollWheel");
+            
+            // WASD movement
+            Vector3 movement = new Vector3(horizontal, 0, vertical) * cameraSpeed * Time.deltaTime;
+            movement = mainCamera.transform.TransformDirection(movement);
+            movement.y = 0; // Keep on same y level
+            mainCamera.transform.position += movement;
+            
+            // Camera rotation with right mouse button
+            if (Input.GetMouseButton(1))
+            {
+                float mouseX = Input.GetAxis("Mouse X");
+                float mouseY = Input.GetAxis("Mouse Y");
+                
+                mainCamera.transform.Rotate(Vector3.up, mouseX * cameraRotationSpeed * Time.deltaTime, Space.World);
+                mainCamera.transform.Rotate(Vector3.right, -mouseY * cameraRotationSpeed * Time.deltaTime, Space.Self);
+            }
+            
+            // Zoom with scroll wheel
+            mainCamera.transform.position += mainCamera.transform.forward * scrollWheel * cameraZoomSpeed * Time.deltaTime;
+            
+            // Click to move
+            if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+            {
+                Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out RaycastHit hit))
+                {
+                    // Clicked on a point in the terrain or scene
+                    Debug.Log($"Clicked at point: {hit.point}");
+                    OnSiteClicked(hit.point);
+                }
+            }
+        }
+        
+        private IEnumerator ShowESRIInstructions()
+        {
+            Debug.Log("Showing ESRI SDK setup instructions");
+            
+            // Create an instructions panel
+            GameObject instructionsPanel = new GameObject("ESRIInstructionsPanel");
+            instructionsPanel.transform.SetParent(uiCanvasObject.transform, false);
+            
+            RectTransform panelRect = instructionsPanel.AddComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.2f, 0.2f);
+            panelRect.anchorMax = new Vector2(0.8f, 0.8f);
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+            
+            Image panelImg = instructionsPanel.AddComponent<Image>();
+            panelImg.color = new Color(0.1f, 0.1f, 0.1f, 0.9f);
+            
+            // Add title
+            GameObject titleObj = new GameObject("Title");
+            titleObj.transform.SetParent(instructionsPanel.transform, false);
+            
+            RectTransform titleRect = titleObj.AddComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0, 0.85f);
+            titleRect.anchorMax = new Vector2(1, 0.95f);
+            titleRect.offsetMin = Vector2.zero;
+            titleRect.offsetMax = Vector2.zero;
+            
+            TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
+            titleText.text = "ARCGIS SDK REQUIRED";
+            titleText.fontSize = 24;
+            titleText.fontStyle = FontStyles.Bold;
+            titleText.alignment = TextAlignmentOptions.Center;
+            titleText.color = Color.white;
+            
+            // Add instructions text
+            GameObject instructionsObj = new GameObject("Instructions");
+            instructionsObj.transform.SetParent(instructionsPanel.transform, false);
+            
+            RectTransform instructionsRect = instructionsObj.AddComponent<RectTransform>();
+            instructionsRect.anchorMin = new Vector2(0.05f, 0.15f);
+            instructionsRect.anchorMax = new Vector2(0.95f, 0.85f);
+            instructionsRect.offsetMin = Vector2.zero;
+            instructionsRect.offsetMax = Vector2.zero;
+            
+            TextMeshProUGUI instructionsText = instructionsObj.AddComponent<TextMeshProUGUI>();
+            instructionsText.text = "The ESRI ArcGIS SDK is required for proper map display.\n\n" +
+                                   "Stub implementations have been created for development:\n\n" +
+                                   "1. In Unity Editor, create an ArcGIS Map GameObject\n" +
+                                   "2. Add Component > BiomorphicSim > Map > ArcGIS Map View\n" +
+                                   "3. Add Component > BiomorphicSim > Map > ArcGIS Camera Component\n" +
+                                   "4. Add Component > BiomorphicSim > Map > ArcGIS Rendering Component\n" +
+                                   "5. Add Component > BiomorphicSim > Map > MapSetup\n\n" +
+                                   "Note: These are stub implementations for development purposes.\n" +
+                                   "For production, you'll need to replace these with the actual ESRI SDK components.";
+            instructionsText.fontSize = 18;
+            instructionsText.alignment = TextAlignmentOptions.Left;
+            instructionsText.color = Color.white;
+            
+            // Add close button
+            GameObject closeBtnObj = new GameObject("CloseButton");
+            closeBtnObj.transform.SetParent(instructionsPanel.transform, false);
+            
+            RectTransform closeRect = closeBtnObj.AddComponent<RectTransform>();
+            closeRect.anchorMin = new Vector2(0.35f, 0.05f);
+            closeRect.anchorMax = new Vector2(0.65f, 0.12f);
+            closeRect.offsetMin = Vector2.zero;
+            closeRect.offsetMax = Vector2.zero;
+            
+            Image closeImg = closeBtnObj.AddComponent<Image>();
+            closeImg.color = new Color(0.7f, 0.2f, 0.2f, 1f);
+            
+            Button closeBtn = closeBtnObj.AddComponent<Button>();
+            closeBtn.transition = Selectable.Transition.ColorTint;
+            
+            // Add text to button
+            GameObject closeBtnTextObj = new GameObject("Text");
+            closeBtnTextObj.transform.SetParent(closeBtnObj.transform, false);
+            
+            RectTransform closeBtnTextRect = closeBtnTextObj.AddComponent<RectTransform>();
+            closeBtnTextRect.anchorMin = Vector2.zero;
+            closeBtnTextRect.anchorMax = Vector2.one;
+            closeBtnTextRect.offsetMin = Vector2.zero;
+            closeBtnTextRect.offsetMax = Vector2.zero;
+            
+            TextMeshProUGUI closeBtnText = closeBtnTextObj.AddComponent<TextMeshProUGUI>();
+            closeBtnText.text = "CLOSE";
+            closeBtnText.fontSize = 18;
+            closeBtnText.fontStyle = FontStyles.Bold;
+            closeBtnText.alignment = TextAlignmentOptions.Center;
+            closeBtnText.color = Color.white;
+            
+            // Add click event to close button
+            closeBtn.onClick.AddListener(() => {
+                Destroy(instructionsPanel);
+                ShowOnlyScreen(startScreen);
+            });
+            
+            // Wait until the panel is closed
+            while (instructionsPanel != null)
+            {
+                yield return null;
+            }
         }
     }
 }

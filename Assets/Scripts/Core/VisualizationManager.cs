@@ -343,101 +343,42 @@ namespace BiomorphicSim.Core
             }
         }
         
+        public void SetMainCamera(Camera camera)
+        {
+            mainCamera = camera;
+            Debug.Log("Main camera reference set in VisualizationManager");
+        }
+
         public void FocusOnSite()
         {
             Debug.Log("[DEBUG] FocusOnSite - Method started");
             
-            // Focus camera on the center of the terrain/site
             if (mainCamera == null)
             {
-                Debug.LogError("[DEBUG] FocusOnSite - Main camera is null!");
-                return;
+                mainCamera = Camera.main;
+                
+                if (mainCamera == null)
+                {
+                    Debug.LogError("[DEBUG] FocusOnSite - Main camera is null!");
+                    return;
+                }
             }
             
-            Debug.Log("[DEBUG] FocusOnSite - Camera found");
-              // Calculate the center of the site
-            SiteGenerator siteGenerator = FindFirstObjectByType<SiteGenerator>(FindObjectsInactive.Include);
-            
-            Debug.Log($"[DEBUG] FocusOnSite - SiteGenerator is {(siteGenerator == null ? "NULL!" : "found")}");
-            
+            // Find the center of the site
             Vector3 siteCenter = Vector3.zero;
-            Vector3 terrainSize = new Vector3(100f, 0f, 100f); // Default fallback size
-            float terrainHeight = 0f;
-              if (siteGenerator == null)
+            
+            // Check if we have site objects to focus on
+            GameObject siteObject = GameObject.Find("WellingtonSite");
+            if (siteObject != null)
             {
-                Debug.LogWarning("[DEBUG] FocusOnSite - SiteGenerator not found, using default values");
-                // Return early to avoid null reference when no site generator exists
-                focusPoint = siteCenter;
-                float defaultDistance = 150f; // Default distance
-                float defaultHeight = 50f; // Default height
-                Vector3 defaultCameraPos = siteCenter + new Vector3(0, defaultHeight, -defaultDistance);
-                mainCamera.transform.position = defaultCameraPos;
-                mainCamera.transform.LookAt(siteCenter);
-                Debug.Log($"[DEBUG] FocusOnSite - Camera positioned with default values");
-                return;
+                siteCenter = siteObject.transform.position;
             }
             
-            Debug.Log($"[DEBUG] FocusOnSite - Initial terrainSize: {terrainSize}");
+            // Position the camera to look at the site
+            mainCamera.transform.position = siteCenter + new Vector3(0, 50, -50);
+            mainCamera.transform.rotation = Quaternion.Euler(45, 0, 0);
             
-            if (siteGenerator != null)
-            {
-                try
-                {
-                    terrainSize = siteGenerator.GetTerrainSize();
-                    Debug.Log($"[DEBUG] FocusOnSite - Got terrain size: {terrainSize}");
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"[DEBUG] FocusOnSite - Exception getting terrain size: {e.Message}\n{e.StackTrace}");
-                }
-                
-                siteCenter = new Vector3(terrainSize.x / 2, 0, terrainSize.z / 2);
-                Debug.Log($"[DEBUG] FocusOnSite - Calculated siteCenter: {siteCenter}");
-                
-                // Try to get terrain height at center point
-                Debug.Log($"[DEBUG] FocusOnSite - Terrain.activeTerrain is {(Terrain.activeTerrain == null ? "NULL!" : "available")}");
-                
-                if (Terrain.activeTerrain != null)
-                {
-                    try
-                    {
-                        terrainHeight = Terrain.activeTerrain.SampleHeight(siteCenter);
-                        Debug.Log($"[DEBUG] FocusOnSite - Sampled terrain height: {terrainHeight}");
-                        siteCenter.y = terrainHeight / 2f; // Position at half the terrain height
-                    }
-                    catch (System.Exception e)
-                    {
-                        Debug.LogError($"[DEBUG] FocusOnSite - Exception sampling terrain: {e.Message}\n{e.StackTrace}");
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogWarning("[DEBUG] FocusOnSite - SiteGenerator not found. Using default center position.");
-                siteCenter = Vector3.zero;
-            }
-            
-            // Set focus point
-            focusPoint = siteCenter;
-            Debug.Log($"[DEBUG] FocusOnSite - Set focusPoint: {focusPoint}");
-            
-            // Position camera to look at the site
-            float distance = Mathf.Max(terrainSize.x, terrainSize.z) * 1.5f; // Scale based on terrain size
-            float height = Mathf.Max(50f, terrainHeight + 75f); // Ensure minimum height
-            Vector3 cameraPos = siteCenter + new Vector3(0, height, -distance);
-            
-            Debug.Log($"[DEBUG] FocusOnSite - Calculated camera position: {cameraPos} (distance: {distance}, height: {height})");
-            
-            try
-            {
-                mainCamera.transform.position = cameraPos;
-                mainCamera.transform.LookAt(siteCenter);
-                Debug.Log($"[DEBUG] FocusOnSite - Camera positioned successfully");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[DEBUG] FocusOnSite - Exception positioning camera: {e.Message}\n{e.StackTrace}");
-            }
+            Debug.Log($"Camera positioned to view site at {siteCenter}");
         }
         
         public void ToggleWindOverlay(bool show)

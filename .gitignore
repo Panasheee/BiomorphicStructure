@@ -31,7 +31,7 @@ Assets/Resources/Textures/J1_CBD_North.slpk
 */ArcGISMapsSDK/HPF/*/HPFrames/
 */ArcGISMapsSDK/HPF/Data/
 
-# Asset meta data should only be ignoredwhen the corresponding asset is also ignored
+# Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
 # Visual Studio / Visual Studio Code files
